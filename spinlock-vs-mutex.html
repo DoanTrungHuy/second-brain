@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tối ưu Đồng bộ hóa: Phân tích SpinLock vs OS Mutex | System Knowledge</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%232563eb%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z%22></path><polyline points=%223.27 6.96 12 12.01 20.73 6.96%22></polyline><line x1=%2212%22 y1=%2222.08%22 x2=%2212%22 y2=%2212%22></line></svg>">
+    <meta name="description" content="Sự đánh đổi giữa Mutex và SpinLock trong lập trình đồng thời (Concurrency).">
+    <!-- Open Graph / Social Sharing Meta Tags -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://system-knowledge.tech/spinlock-vs-mutex.html">
+    <meta property="og:title" content="Tối ưu Đồng bộ hóa: Phân tích SpinLock vs OS Mutex | System Knowledge">
+    <meta property="og:description" content="Sự đánh đổi giữa Mutex và SpinLock trong lập trình đồng thời (Concurrency).">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80">
+    
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tối ưu Đồng bộ hóa: Phân tích SpinLock vs OS Mutex | System Knowledge">
+    <meta name="twitter:description" content="Sự đánh đổi giữa Mutex và SpinLock trong lập trình đồng thời (Concurrency).">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/cpp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <script>MathJax = {tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']], processEscapes: true }, svg: { fontCache: 'global' }};</script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg-body: #f9fafb; --bg-sidebar: #ffffff; --bg-content: #ffffff; --text-main: #111827; --text-muted: #6b7280; --primary: #2563eb; --primary-light: #eff6ff; --border: #e5e7eb; }
+        body { margin: 0; background-color: var(--bg-body); color: var(--text-main); font-family: 'Inter', system-ui, sans-serif; display: flex; height: 100vh; -webkit-font-smoothing: antialiased; }
+        #sidebar { width: 300px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 20; }
+        .brand { padding: 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; color: var(--text-main); letter-spacing: -0.02em; }
+        .brand svg { width: 28px; height: 28px; color: var(--primary); }
+                .search-box { padding: 15px 20px 5px 20px; position: relative; }
+        .search-box input { width: 100%; padding: 10px 15px 10px 38px; border: 1px solid var(--border); border-radius: 8px; background-color: #f9fafb; font-size: 0.85rem; color: var(--text-main); box-sizing: border-box; outline: none; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .search-box input:focus { border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 3px var(--primary-light); }
+        .search-box svg { position: absolute; left: 32px; top: 25px; width: 16px; height: 16px; color: #9ca3af; }
+        #nav-menu { flex-grow: 1; overflow-y: auto; padding: 16px 12px; }
+        .category-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 20px 0 8px 12px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 2px; color: #374151; text-decoration: none; font-size: 0.875rem; font-weight: 500; border-radius: 8px; transition: all 0.15s ease; }
+        .nav-item svg { width: 18px; height: 18px; color: #9ca3af; transition: color 0.15s ease; flex-shrink: 0; }
+        .nav-item:hover { background-color: #f3f4f6; color: var(--text-main); }
+        .nav-item:hover svg { color: #4b5563; }
+        .nav-item.active { background-color: var(--primary-light); color: var(--primary); }
+        .nav-item.active svg { color: var(--primary); }
+        #main-content { flex-grow: 1; overflow-y: auto; scroll-behavior: smooth; padding: 40px; position: relative; }
+        .article-container { max-width: 800px; margin: 0 auto 100px; background: var(--bg-content); padding: 50px 70px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: var(--text-main); margin-top: 1.8em; margin-bottom: 0.8em; font-weight: 700; letter-spacing: -0.02em; scroll-margin-top: 80px; }
+        .markdown-body h1 { font-size: 2.2rem; margin-top: 0; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .markdown-body h2 { font-size: 1.5rem; }
+        .markdown-body h3 { font-size: 1.25rem; }
+        .markdown-body p, .markdown-body li { font-size: 1rem; line-height: 1.75; color: #374151; margin-bottom: 1.25em; }
+        .markdown-body a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .markdown-body a:hover { text-decoration: underline; text-underline-offset: 4px; }
+        .markdown-body blockquote { border-left: 3px solid var(--primary); margin: 1.5em 0; padding: 1em 1.5em; background: var(--primary-light); border-radius: 0 8px 8px 0; color: #1e3a8a; }
+        .markdown-body pre, .markdown-body code { font-family: 'Fira Code', monospace; font-size: 0.85em; }
+        .markdown-body p code, .markdown-body li code { background-color: #f3f4f6; color: #be185d; padding: 0.2em 0.4em; border-radius: 4px; border: 1px solid #e5e7eb; }
+        .markdown-body pre { background-color: #f8fafc; padding: 1.5em; border-radius: 8px; border: 1px solid #e2e8f0; overflow-x: auto; margin: 1.5em 0; }
+        .markdown-body pre code { background: none; color: inherit; padding: 0; border: none; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 2em 0; font-size: 0.9em; }
+        .markdown-body th, .markdown-body td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+        .markdown-body th { background-color: #f9fafb; font-weight: 600; color: #4b5563; }
+        .markdown-body tr:hover td { background-color: #f9fafb; }
+        .mobile-header { display: none; }
+        @media (max-width: 768px) {
+            #sidebar .brand { display: none; }
+            body { flex-direction: column; }
+            #sidebar { width: 100%; display: none; position: absolute; top: 60px; left: 0; bottom: 0; z-index: 30; }
+            #sidebar.open { display: flex; }
+            .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #fff; border-bottom: 1px solid var(--border); z-index: 40; }
+            .menu-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-main); }
+            #main-content { padding: 20px 15px; }
+            .article-container { padding: 30px 20px; }
+            .markdown-body h1 { font-size: 1.8rem; }
+        }
+    
+        /* Extra Responsive Fixes */
+        #main-content { min-width: 0; overflow-x: hidden; }
+        .article-container { width: 100%; box-sizing: border-box; overflow-x: hidden; }
+        .markdown-body p, .markdown-body li { overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; max-width: 100%; }
+        .markdown-body mjx-container { max-width: 100%; overflow-x: auto !important; overflow-y: hidden !important; max-height: max-content; }
+        .markdown-body img { max-width: 100%; height: auto; }
+        @media (max-width: 768px) {
+            .markdown-body mjx-container { padding-bottom: 5px; } /* Space for scrollbar on mobile */
+        }
+    </style>
+
+</head>
+<body>
+    <div class="mobile-header">
+        <div style="font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            System Knowledge
+        </div>
+        <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    </div>
+
+    <div id="sidebar">
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            System Knowledge
+        </div>
+                <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="search-input" placeholder="Tìm kiếm chủ đề...">
+        </div>
+        <div id="nav-menu"><div class="category-title">Hardware & Memory Systems</div>
+<a href="index.html" class="nav-item" data-file="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg><span>Kiến trúc Cache & Virtual Memory</span></a>
+<a href="mmu-tlb-page-table.html" class="nav-item" data-file="mmu-tlb-page-table.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><span>Cơ chế MMU, TLB & Page Table</span></a>
+<a href="mesi-protocol.html" class="nav-item" data-file="mesi-protocol.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Giao thức Đồng bộ MESI</span></a>
+<div class="category-title">Concurrency & Operating System</div>
+<a href="spinlock-vs-mutex.html" class="nav-item active" data-file="spinlock-vs-mutex.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span>Tối ưu Đồng bộ: SpinLock vs Mutex</span></a>
+<div class="category-title">C++ Performance Optimization</div>
+<a href="string-vs-string-view.html" class="nav-item" data-file="string-vs-string-view.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg><span>Quản lý Bộ nhớ: std::string_view</span></a>
+</div>
+    </div>
+
+    <div id="main-content">
+        <div class="article-container">
+            <article id="markdown-body" class="markdown-body"></article>
+        </div>
+    </div>
+
+    <script>
+        // Highly Robust Scroll Handler for TOC Anchor Links
+                        // Highly Robust Scroll Handler for TOC Anchor Links
+        document.addEventListener('click', function(e) {
+            let target = e.target;
+            while (target && target.tagName !== 'A') target = target.parentNode;
+            
+            if (target && target.tagName === 'A') {
+                const href = target.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    e.preventDefault();
+                    history.pushState(null, null, href);
+                    
+                    const decodedHash = decodeURIComponent(href.substring(1));
+                    let targetEl = document.getElementById(decodedHash);
+                    
+                    if (!targetEl) {
+                        const headings = document.querySelectorAll('#markdown-body h1, #markdown-body h2, #markdown-body h3, #markdown-body h4');
+                        const cleanStr = str => str.toLowerCase().replace(/[^\w\u00C0-\u024F\u1E00-\u1EFF0-9]/g, '');
+                        const targetClean = cleanStr(decodedHash);
+                        
+                        // Match 1: Ignore all punctuation/spacing
+                        for (let h of headings) {
+                            if (cleanStr(h.textContent) === targetClean) {
+                                targetEl = h; break;
+                            }
+                        }
+                        
+                        // Match 2: Number prefix matching (solves typos in markdown headings)
+                        if (!targetEl) {
+                            const prefixMatch = decodedHash.match(/^(\d+)-/);
+                            if (prefixMatch) {
+                                const num = prefixMatch[1];
+                                for (let h of headings) {
+                                    if (h.textContent.trim().startsWith(num + '.')) {
+                                        targetEl = h; break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (targetEl) {
+                        const container = document.getElementById('main-content');
+                        const topPos = targetEl.offsetTop - 30;
+                        container.scrollTo({
+                            top: topPos,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }
+        });
+
+        const rawMarkdown = `# Tổng hợp Kiến thức (Low-level C++ & System Design)
+
+Tài liệu này tổng hợp các kiến thức cốt lõi về tối ưu hóa hiệu năng (Performance Optimization) và lập trình đồng thời (Concurrency) mức độ Micro-giây, dựa trên các hệ thống hiệu năng cao thông dụng.
+
+---
+
+## 1. Trade-off: OS Mutex vs User-Space SpinLock
+Sự đánh đổi cốt lõi giữa Mutex và SpinLock là: **"Đốt CPU để lấy độ trễ siêu thấp"** so với **"Tiết kiệm CPU nhưng chịu độ trễ cao"**.
+
+*   **OS Mutex (\`std::mutex\`):** Khi luồng A giữ khóa, các luồng B, C, D lao tới sẽ bị hệ điều hành (OS) ép thực hiện **Syscall** (như \`futex\` trên Linux) để chuyển trạng thái sang Sleep. Khi A nhả khóa, OS tốn thời gian Wakeup các luồng khác. Sự ra vào Kernel (Context Switch) này làm tăng Latency (độ trễ).
+*   **SpinLock:** Hoạt động 100% ở User-Space. Luồng bị chặn sẽ chạy một vòng lặp (Spin) liên tục để hỏi xem khóa mở chưa. Đổi lại việc tốn vài chu kỳ CPU để xoay vòng, SpinLock triệt tiêu được rào cản Syscall. Ngay khi A nhả khóa, B lấy được khóa ngay lập tức trong cùng 1 chu kỳ phần cứng. Rất phù hợp cho các Critical Section cực kỳ ngắn (vài micro-giây).
+
+---
+
+## 2. Kiến trúc 256-way Sharded Hash Map
+*   **Decentralize Bottleneck:** Thay vì dùng 1 Mutex duy nhất bảo vệ toàn bộ Hash Map (khiến các luồng truy cập Key khác nhau cũng phải đợi nhau), dữ liệu được chia làm 256 phân vùng (Shards). Các luồng ghi vào các Shard khác nhau chạy hoàn toàn song song.
+*   **Chống False Sharing (\`alignas(64)\`):** Bằng cách buộc cấu trúc của mỗi Shard phải căn lề bộ nhớ 64 bytes (kích thước một CPU Cache Line), ta đảm bảo các ổ khóa \`SpinLock\` của 2 Shard liền kề KHÔNG BAO GIỜ nằm chung trên một Cache Line. Điều này ngăn chặn việc các lõi CPU liên tục vô hiệu hóa Cache của nhau, giữ hiệu năng phần cứng ở mức tối đa.
+
+---
+
+## 3. "Giải phẫu" SpinLock
+\`\`\`cpp
+class SpinLock {
+    std::atomic_flag flag = ATOMIC_FLAG_INIT;
+public:
+    void lock() {
+        while (flag.test_and_set(std::memory_order_acquire)) {
+            __builtin_ia32_pause();
+        }
+    }
+    void unlock() {
+        flag.clear(std::memory_order_release);
+    }
+};
+\`\`\`
+*   \`std::atomic_flag\`: Kiểu dữ liệu duy nhất trong C++ được chuẩn hóa đảm bảo 100% Lock-Free trên mọi phần cứng.
+*   \`test_and_set()\`: Hàm thực hiện nguyên tử (Atomic) 2 việc cùng lúc: Đóng cờ (Set = \`true\`) và trả về trạng thái cũ. Nếu trả về \`false\` (chưa ai khóa) $\\rightarrow$ lấy được khóa. Nếu trả về \`true\` (đã khóa) $\\rightarrow$ tiếp tục Spin trong vòng lặp \`while\`.
+
+---
+
+## 4. Memory Order & Instruction Reordering (Đảo lộn lệnh)
+Trình biên dịch và CPU luôn có xu hướng đảo lộn thứ tự các lệnh để chạy cho nhanh. Nếu không có rào cản (Memory Barriers), CPU có thể mang đoạn code xử lý dữ liệu ra khỏi phạm vi khóa, gây nát dữ liệu.
+*   **\`memory_order_acquire\` (Rào cản đi XUỐNG):** Đặt ở hàm \`lock()\`. Cấm tuyệt đối CPU không được kéo bất kỳ dòng code nào ở BÊN DƯỚI khóa vượt lên chạy trước khi thực sự lấy được khóa.
+*   **\`memory_order_release\` (Rào cản đi LÊN):** Đặt ở hàm \`unlock()\`. Cấm CPU không được trượt bất kỳ lệnh nào từ BÊN TRÊN xuống chạy sau khi đã mở khóa. Đồng thời bắt CPU đồng bộ hóa toàn bộ dữ liệu vừa sửa xuống RAM.
+$\\rightarrow$ Hai rào cản này nhốt chặt đoạn dữ liệu quan trọng ở giữa, tạo thành vùng an toàn (Critical Section) tuyệt đối.
+
+---
+
+## 5. Chu kỳ CPU (CPU Cycle)
+*   Chu kỳ là "nhịp đập" của CPU. 1 CPU 3GHz đập 3 tỷ nhịp mỗi giây (1 cycle $\\approx$ 0.3 ns).
+*   Đọc dữ liệu từ L1 Cache tốn 1-3 chu kỳ. Đọc từ RAM tốn 200-300 chu kỳ. 
+*   Đó là lý do dự án sử dụng \`Zero-Allocation\` (không dùng \`new/malloc\`) và \`Slab Allocator\` để ép dữ liệu nằm vừa vặn trong Cache, tránh tốn chu kỳ lãng phí vào việc chờ RAM.
+
+---
+
+## 6. CPU Pipelining, Branch Prediction & Pipeline Flush
+*   **Pipeline (Đường ống):** CPU chia nhỏ lệnh thành các bước (Fetch, Decode, Execute...) và đưa liên tục vào đường ống để thực thi gối đầu lên nhau.
+*   **Branch Prediction (Đoán rẽ nhánh):** Khi gặp vòng lặp \`while\` (chờ khóa), CPU sẽ "đoán mò" là khóa còn lâu mới mở, và nhồi trước hàng trăm lệnh chờ đợi vào Pipeline.
+*   **Pipeline Flush (Gãy đường ống):** Khi khóa đột ngột mở (\`flag = false\`), kết quả tiên đoán của CPU bị sai. CPU bắt buộc phải vứt bỏ toàn bộ lệnh chờ đợi làm dở dang trong Pipeline vào sọt rác, và nạp lại lệnh đúng từ đầu. Sự dọn dẹp này tốn hàng chục chu kỳ CPU, gây đứng hình (Stall).
+
+## 7. Giải pháp từ lệnh \`__builtin_ia32_pause()\`
+Lệnh \`pause\` (dịch ra hợp ngữ là \`PAUSE\` trên x86) chính là tín hiệu báo cho CPU biết: *"Đây là vòng lặp chờ, đừng đoán mò"*.
+1.  **Chống gãy đường ống:** CPU ngừng nhồi nhét lệnh vào Pipeline, khi khóa mở, luồng bay thẳng vào Critical Section mà không có rác cần dọn.
+2.  **Hạ nhiệt & Tiết kiệm điện:** Ép luồng "nghỉ ngơi" một chút xíu, giảm tần suất chọc vào RAM.
+3.  **Nhường tài nguyên:** Trong môi trường Hyper-Threading, luồng đang Spin sẽ nhường Execution Units lại cho luồng khác xài chung nhân vật lý, giúp toàn bộ hệ thống tăng tốc.
+`;
+        
+        // Custom renderer to aggressively assign IDs to headings so native hash also works
+        function generateSlug(t) { return t.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'); }
+        const renderer = new marked.Renderer();
+        renderer.heading = function(text, level, raw) {
+            const id = generateSlug(raw);
+            return `<h${level} id="${id}">${text}</h${level}>`;
+        };
+
+        marked.setOptions({
+            renderer: renderer,
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true
+        });
+        
+        document.getElementById('markdown-body').innerHTML = marked.parse(rawMarkdown);
+    </script>
+        <script src="search-index.js"></script>
+    <script>
+        // Full-Text Search Functionality
+        document.getElementById('search-input')?.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                const url = item.getAttribute('href');
+                const text = item.textContent.toLowerCase();
+                
+                let isMatch = text.includes(term);
+                
+                // If not in title, search in full content
+                if (!isMatch && windowSearchIndex) {
+                    const article = windowSearchIndex.find(a => a.url === url);
+                    if (article && article.content.includes(term)) {
+                        isMatch = true;
+                    }
+                }
+                
+                item.style.display = isMatch ? 'flex' : 'none';
+            });
+            
+            const categories = document.querySelectorAll('.category-title');
+            categories.forEach(cat => {
+                let next = cat.nextElementSibling;
+                let hasVisibleChild = false;
+                while (next && next.classList.contains('nav-item')) {
+                    if (next.style.display !== 'none') {
+                        hasVisibleChild = true;
+                        break;
+                    }
+                    next = next.nextElementSibling;
+                }
+                cat.style.display = hasVisibleChild ? 'block' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
