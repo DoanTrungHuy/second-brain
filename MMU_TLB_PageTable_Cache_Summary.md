@@ -41,7 +41,7 @@ Tài liệu này tổng hợp toàn bộ kiến thức nâng cao về **Kiến t
 ### Tại sao Array vượt trội hoàn toàn về hiệu năng?
 1. **Spatial Locality (Tính định vị không gian):**
    * **Array:** Các phần tử nằm liên tiếp. Khi đọc 1 phần tử (4 bytes), CPU kéo luôn **64 Bytes (16 phần tử int)** vào Cache Line. Các lần đọc sau trúng L1 Cache ngay lập tức (Cache Hit).
-   * **Linked List:** Các Node nằm rải rác trên Heap. Nạp 1 Node kéo theo 64 Bytes dữ liệu rác/dữ liệu khác $ightarrow$ Truy cập con trỏ `next` gây **Cache Miss** liên tục (tốn 200–300 cycles chờ RAM).
+   * **Linked List:** Các Node nằm rải rác trên Heap. Nạp 1 Node kéo theo 64 Bytes dữ liệu rác/dữ liệu khác $\rightarrow$ Truy cập con trỏ `next` gây **Cache Miss** liên tục (tốn 200–300 cycles chờ RAM).
 2. **Hardware Prefetcher:** CPU tự nhận diện mẫu truy cập tuyến tính của Array để tải trước Cache Line tiếp theo. Linked List bị vướng hiện tượng **Pointer Chasing** làm CPU "mù tóm" không đoán trước được địa chỉ kế tiếp.
 3. **TLB Impact:** Linked List rải rác làm nhảy qua nhiều trang 4KB khác nhau, gây ra thêm **TLB Miss**.
 
@@ -49,7 +49,7 @@ Tài liệu này tổng hợp toàn bộ kiến thức nâng cao về **Kiến t
 
 ## 3. Cấu trúc & Cơ chế vận hành của TLB
 
-TLB là bộ nhớ đệm phần cứng siêu nhanh nằm trong MMU, lưu các cặp ánh xạ **VPN $ightarrow$ PFN**.
+TLB là bộ nhớ đệm phần cứng siêu nhanh nằm trong MMU, lưu các cặp ánh xạ **VPN $\rightarrow$ PFN**.
 
 ### Cấu trúc 1 TLB Entry:
 * **VPN (Virtual Page Number):** Key tra cứu (Số trang ảo).
@@ -110,7 +110,7 @@ Cần phân biệt rõ 2 mô hình cắt bit địa chỉ:
 
 1. **`0x00401000` (Byte 0):**
    * Index: `0000` (Set 0) | Offset: `000000` (0) | Tag: `0x001004`
-   * **L1 MISS** $ightarrow$ Nạp 64 Bytes (`0x00401000` – `0x0040103F`) vào **Set 0**.
+   * **L1 MISS** $\rightarrow$ Nạp 64 Bytes (`0x00401000` – `0x0040103F`) vào **Set 0**.
 2. **`0x00401014` (Byte 20):**
    * Index: `0000` (Set 0) | Offset: `010100` (20) | Tag: `0x001004`
    * **L1 HIT** (Cùng Set 0, cùng Tag `0x001004`).
@@ -120,10 +120,10 @@ Cần phân biệt rõ 2 mô hình cắt bit địa chỉ:
 4. **`0x00401040` (Byte 64 - Tràn Offset):**
    * **Hiện tượng tràn:** Con số 64 vượt quá 6 bit Offset (`111111` = 63). Bit tràn đẩy sang làm **Index tăng từ 0 lên 1** (`0001`).
    * Index: `0001` (Set 1) | Offset: `000000` (0) | Tag: `0x001004`
-   * **L1 MISS** $ightarrow$ Nhảy sang **Set 1**, tải 64 Bytes tiếp theo (`0x00401040` – `0x0040107F`).
+   * **L1 MISS** $\rightarrow$ Nhảy sang **Set 1**, tải 64 Bytes tiếp theo (`0x00401040` – `0x0040107F`).
 5. **`0x00402000` (Địa chỉ xa):**
    * Index: `0000` (Set 0) | Offset: `000000` (0) | Tag: `0x001008` (Tag thay đổi!)
-   * **L1 MISS** $ightarrow$ Do Tag khác nhau, Cache Line mới ghi đè lên Set 0.
+   * **L1 MISS** $\rightarrow$ Do Tag khác nhau, Cache Line mới ghi đè lên Set 0.
 
 ---
 *Tài liệu tổng hợp tự động từ buổi học về Architecture & Virtual Memory System.*
