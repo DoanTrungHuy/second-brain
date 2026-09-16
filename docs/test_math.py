@@ -1,0 +1,17 @@
+﻿with open('test_math.html', 'w', encoding='utf-8') as f:
+    f.write("""<!DOCTYPE html>
+<html>
+<head>
+<script>MathJax = {tex: { inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']], processEscapes: true }, svg: { fontCache: 'global' }};</script>
+<script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<div id="content">Offset ($0 \rightarrow 5$ bit cuối)</div>
+<script>
+console.log("MathJax object:", typeof MathJax);
+if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+    MathJax.typesetPromise([document.getElementById('content')]).then(() => console.log('Done'));
+}
+</script>
+</body>
+</html>""")
