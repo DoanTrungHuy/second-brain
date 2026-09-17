@@ -4,17 +4,6 @@
 
 ---
 
-## MỤC LỤC
-1. [Bản Chất Của Array Trong Cache & Cấu Trúc Địa Chỉ (Tag, Index, Offset)](#1-bản-chất-của-array-trong-cache--cấu-trúc-địa-chỉ-tag-index-offset)
-2. [Chi Tiết Luồng Đọc/Ghi Khi CPU Truy Cập Mảng](#2-chi-tiết-luồng-đọcghi-khi-cpu-truy-cập-mảng)
-3. [L1 Cache (VIPT) vs L2/L3 Cache (PIPT) & Thảm Họa Nếu L2/L3 Dùng Index Ảo](#3-l1-cache-vipt-vs-l2l3-cache-pipt--thảm-họa-nếu-l2l3-dùng-index-ảo)
-4. [Bộ Nhớ Ảo (Virtual Memory) vs RAM Thật (Physical Memory) & Ranh Giới Trang 4KB](#4-bộ-nhớ-ảo-virtual-memory-vs-ram-thật-physical-memory--ranh-giới-trang-4kb)
-5. [Buddy Allocator Trong Kernel: Tại Sao Phải Cấp Khối $2^n$ Trang RAM?](#5-buddy-allocator-trong-kernel-tại-sao-phải-cấp-khối-2n-trang-ram)
-6. [Cơ Chế `malloc` Ở User Space: "Buôn Sỉ - Bán Lẻ", Metadata Ẩn & `free()`](#6-cơ-chế-malloc-ở-user-space-buôn-sỉ---bán-lẻ-metadata-ẩn--free)
-7. [Mã Nguồn C Thực Tế Soi Trực Tiếp Mọi Hiện Tượng](#7-mã-nguồn-c-thực-tế-soi-trực-tiếp-mọi-hiện-tượng)
-
----
-
 ## 1. BẢN CHẤT CỦA ARRAY TRONG CACHE & CẤU TRÚC ĐỊA CHỈ (TAG, INDEX, OFFSET)
 
 ### 1.1 Cache không biết "Mảng" hay "Kiểu dữ liệu" là gì

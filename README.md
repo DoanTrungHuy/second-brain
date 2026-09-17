@@ -19,7 +19,6 @@ computer systems concepts.
 - [MESI Cache Coherence Protocol](MESI_Cache_Coherence_Protocol.md)
 - [MMU, TLB & Page Tables](MMU_TLB_PageTable_Cache_Summary.md)
 - [SpinLock Trade-offs](SpinLock_TradeOff.md)
-- [Compare String and String View](string_vs_string_view.md)
 
 > These are personal learning notes written to help me understand,
 > retain, and revisit low-level systems concepts.

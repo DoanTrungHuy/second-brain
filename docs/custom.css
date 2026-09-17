@@ -4,15 +4,18 @@
     --bg-body: #ffffff;
     --bg-card: #f8fafc;
     --bg-sidebar: #f8fafc;
+    --bg-content: #ffffff;
     --text-main: #0f172a;
     --text-muted: #64748b;
     --border: #e2e8f0;
     --primary: #2563eb;
     --primary-light: #eff6ff;
-    --code-bg: #f8fafc; /* Very light slate */
+    --code-bg: #f8fafc;
     --code-text: #0f172a;
     --mac-header-bg: #e2e8f0;
     --mac-header-text: #475569;
+    --inline-code-bg: #f1f5f9;
+    --inline-code-color: #be185d;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 }
@@ -23,15 +26,18 @@
     --bg-body: #0f172a;
     --bg-card: #1e293b;
     --bg-sidebar: #1e293b;
+    --bg-content: #0f172a;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --border: #334155;
     --primary: #3b82f6;
     --primary-light: #1e3a8a;
-    --code-bg: #111827; /* Dark slate */
+    --code-bg: #111827;
     --code-text: #f8fafc;
     --mac-header-bg: #0f172a;
     --mac-header-text: #94a3b8;
+    --inline-code-bg: #1e293b;
+    --inline-code-color: #f472b6;
 }
 
 
@@ -546,4 +552,91 @@ body {
         overflow-y: auto !important;
         align-self: flex-start;
     }
+}
+
+
+/* THEME INTEGRATION & DARK MODE FIXES */
+.article-container {
+    background: var(--bg-content) !important;
+    border-color: var(--border) !important;
+    box-shadow: none !important;
+}
+
+.markdown-body {
+    color: var(--text-main) !important;
+}
+
+.markdown-body p, 
+.markdown-body li {
+    color: var(--text-main) !important;
+}
+
+.markdown-body h1, 
+.markdown-body h2, 
+.markdown-body h3, 
+.markdown-body h4 {
+    color: var(--text-main) !important;
+    border-color: var(--border) !important;
+}
+
+.markdown-body p code, 
+.markdown-body li code {
+    background-color: var(--inline-code-bg) !important;
+    color: var(--inline-code-color) !important;
+    border-color: var(--border) !important;
+}
+
+.markdown-body blockquote {
+    background: var(--primary-light) !important;
+    border-left-color: var(--primary) !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .markdown-body blockquote {
+    background: rgba(59, 130, 246, 0.1) !important;
+    color: #93c5fd !important;
+}
+
+.markdown-body table th {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border) !important;
+}
+
+.markdown-body table td {
+    border-color: var(--border) !important;
+}
+
+.markdown-body tr:hover td {
+    background-color: var(--bg-card) !important;
+}
+
+.mobile-header {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+}
+
+.search-box input {
+    background-color: var(--bg-body) !important;
+    border-color: var(--border) !important;
+    color: var(--text-main) !important;
+}
+
+.nav-item {
+    color: var(--text-muted) !important;
+}
+
+.nav-item:hover {
+    background-color: var(--border) !important;
+    color: var(--text-main) !important;
+}
+
+.nav-item.active {
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
+}
+
+[data-theme="dark"] .nav-item.active {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
 }

@@ -1,6 +1,6 @@
-# Tổng hợp Kiến thức - Dự án TurboKV (Low-level C++ & System Design)
+# Tổng hợp Kiến thức (Low-level C++ & System Design)
 
-Tài liệu này tổng hợp các kiến thức cốt lõi về tối ưu hóa hiệu năng (Performance Optimization) và lập trình đồng thời (Concurrency) mức độ Micro-giây, dựa trên mã nguồn thực tế của dự án.
+Tài liệu này tổng hợp các kiến thức cốt lõi về tối ưu hóa hiệu năng (Performance Optimization) và lập trình đồng thời (Concurrency) mức độ Micro-giây, dựa trên các hệ thống hiệu năng cao thông dụng.
 
 ---
 

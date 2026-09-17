@@ -4,16 +4,6 @@ Tài liệu này tổng hợp toàn bộ kiến thức nâng cao về **Kiến t
 
 ---
 
-## Mục lục
-1. [Phân rã địa chỉ & Tối ưu L1/L2 Cache (VIPT vs PIPT)](#1-phân-rã-địa-chỉ--tối-ưu-l1l2-cache-vipt-vs-pipt)
-2. [Array vs Linked List dưới góc độ phần cứng](#2-array-vs-linked-list-dưới-góc-độ-phần-cứng)
-3. [Cấu trúc & Cơ chế vận hành của TLB (Translation Lookaside Buffer)](#3-cấu-trúc--cơ-chế-vận-hành-của-tlb)
-4. [Phân định phần cứng & phần mềm (MMU, TLB, Page Table)](#4-phân-định-phần-cứng--phần-mềm-mmu-tlb-page-table)
-5. [Cơ chế xẻ nhỏ địa chỉ (VPN vs Tag-Index-Offset)](#5-cơ-chế-xẻ-nhỏ-địa-chỉ-vpn-vs-tag-index-offset)
-6. [Ví dụ minh họa tính toán địa chỉ Hex & Hiện tượng tràn Cache Line](#6-ví-dụ-minh-họa-tính-toán-địa-chỉ-hex--hiện-tượng-tràn-cache-line)
-
----
-
 ## 1. Phân rã địa chỉ & Tối ưu L1/L2 Cache (VIPT vs PIPT)
 
 Địa chỉ khi truy cập Cache được chia làm 3 phần:

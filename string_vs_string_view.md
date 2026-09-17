@@ -6,11 +6,11 @@ Trong C++ hiện đại (từ C++17 trở đi), `std::string_view` được ra m
 
 ## 1. Bản chất cốt lõi: Ownership (Quyền sở hữu)
 
-### 🧱 `std::string` (Người sở hữu - The Owner)
+### `std::string` (Người sở hữu - The Owner)
 - **Cơ chế:** Khi bạn tạo một `std::string`, nó sẽ tự động yêu cầu Hệ điều hành cấp phát một vùng nhớ riêng trên **Heap (RAM)** thông qua hàm `new` / `malloc`. Sau đó, nó **sao chép (copy)** các ký tự vào vùng nhớ đó.
 - **Vòng đời:** Nó tự quản lý vùng nhớ của mình. Khi biến `std::string` bị hủy, nó sẽ tự động gọi `delete` / `free` để trả lại RAM cho hệ điều hành. Dữ liệu luôn an toàn.
 
-### 👓 `std::string_view` (Người quan sát - The Observer)
+### `std::string_view` (Người quan sát - The Observer)
 - **Cơ chế:** `std::string_view` **KHÔNG** sở hữu bất kỳ dữ liệu nào. Nó thực chất chỉ là một cái vỏ bọc mỏng nhẹ chứa đúng 2 biến:
   1. Một con trỏ (`const char* pointer`) trỏ tới một vùng nhớ có sẵn.
   2. Một biến đếm (`size_t length`) báo hiệu chuỗi dài bao nhiêu byte.
@@ -31,14 +31,14 @@ Dữ liệu:     [ 'H' ][ 'e' ][ 'l' ][ 'l' ][ 'o' ][ '!' ]
 std::string original = "Hello!";
 std::string cut = original.substr(0, 4); // Lấy chữ "Hell"
 ```
-👉 **Hành động:** Trình biên dịch xin Hệ điều hành một vùng RAM mới (ví dụ ở địa chỉ `0x500`), rồi chạy vòng lặp để chép 4 chữ cái 'H', 'e', 'l', 'l' sang vùng nhớ mới đó. Tốn tài nguyên tính toán và RAM.
+**Hành động:** Trình biên dịch xin Hệ điều hành một vùng RAM mới (ví dụ ở địa chỉ `0x500`), rồi chạy vòng lặp để chép 4 chữ cái 'H', 'e', 'l', 'l' sang vùng nhớ mới đó. Tốn tài nguyên tính toán và RAM.
 
 ### Cách `std::string_view` cắt chuỗi (Substr):
 ```cpp
 std::string_view original = "Hello!";
 std::string_view cut = original.substr(0, 4); 
 ```
-👉 **Hành động:** Trình biên dịch tạo 2 biến nhỏ xíu trên Stack:
+**Hành động:** Trình biên dịch tạo 2 biến nhỏ xíu trên Stack:
 - `pointer` = `0x100`
 - `length` = `4`
 Xong! Không có byte nào bị copy, không có RAM nào được cấp phát thêm.
@@ -57,7 +57,7 @@ Bảng so sánh khi thực hiện thao tác cắt nhỏ (parsing) một chuỗi 
 | **Độ phức tạp cắt chuỗi** | O(N) (Tùy độ dài chuỗi con) | O(1) (Chỉ là phép cộng con trỏ) |
 | **Phân mảnh RAM (Fragmentation)** | Rất cao | Không có |
 
-> 💡 **Kết luận:** Trong các ứng dụng xử lý dữ liệu lớn (đọc file Log, phân tích JSON/CSV, xử lý bản tin mạng), việc thay thế `std::string` bằng `std::string_view` ở các khâu đọc/bóc tách có thể tăng hiệu năng lên hàng chục lần.
+> **Kết luận:** Trong các ứng dụng xử lý dữ liệu lớn (đọc file Log, phân tích JSON/CSV, xử lý bản tin mạng), việc thay thế `std::string` bằng `std::string_view` ở các khâu đọc/bóc tách có thể tăng hiệu năng lên hàng chục lần.
 
 ---
 
@@ -65,7 +65,7 @@ Bảng so sánh khi thực hiện thao tác cắt nhỏ (parsing) một chuỗi 
 
 Vì `std::string_view` chỉ là "Người quan sát", nó phụ thuộc hoàn toàn sinh mạng vào "Vật chủ" (Chuỗi gốc mà nó trỏ vào). Nếu Vật chủ bị xóa đi, `string_view` sẽ trỏ vào vùng nhớ rác.
 
-🚨 **Ví dụ gây sập chương trình (Crash / Segfault):**
+**Ví dụ gây sập chương trình (Crash / Segfault):**
 ```cpp
 #include <iostream>
 #include <string>
@@ -87,5 +87,5 @@ int main() {
 }
 ```
 
-### 🎯 Quy tắc vàng khi dùng `std::string_view`:
+### Quy tắc vàng khi dùng `std::string_view`:
 **Luôn đảm bảo Vòng đời (Lifetime) của Chuỗi gốc (Vật chủ) phải sống lâu hơn hoặc bằng với `std::string_view` của nó.** Chỉ nên dùng `string_view` làm tham số truyền vào hàm (Function Arguments) hoặc để xử lý biến cục bộ trong những khoảng thời gian ngắn hạn. Khi cần lưu trữ dữ liệu lâu dài vào CSDL hay biến toàn cục, hãy chuyển nó về lại thành `std::string`.
