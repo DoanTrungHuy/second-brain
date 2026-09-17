@@ -1,10 +1,8 @@
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Sidebar Toggle
+    // 1. Mobile Sidebar Toggle
     const menuBtn = document.querySelector('.menu-btn');
     const sidebar = document.getElementById('sidebar');
     if (menuBtn && sidebar) {
-        // Override original toggle
         menuBtn.onclick = (e) => {
             e.stopPropagation();
             sidebar.classList.toggle('open');
@@ -15,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         
-        // Close on click outside
         document.body.addEventListener('click', (e) => {
             if (document.body.classList.contains('sidebar-open') && !sidebar.contains(e.target)) {
                 sidebar.classList.remove('open');
@@ -23,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Close on link click
         sidebar.querySelectorAll('a').forEach(a => {
             a.addEventListener('click', () => {
                 sidebar.classList.remove('open');
@@ -32,293 +28,213 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. Theme Toggle
-    const sidebarBrand = document.querySelector('.brand');
+    // 2. Theme Toggle with Smooth Animation
+    const sidebarBrand = document.querySelector('#sidebar .brand');
     const themeBtn = document.createElement('button');
-    themeBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:inherit;opacity:0.7;margin-left:auto;';
-    themeBtn.innerHTML = `<svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+    themeBtn.className = 'theme-toggle';
+    themeBtn.id = 'theme-icon';
+    themeBtn.title = 'Chuyển giao diện (Phím tắt: T)';
     
-    if (sidebarBrand) sidebarBrand.appendChild(themeBtn);
+    if (sidebarBrand) {
+        sidebarBrand.appendChild(themeBtn);
+    }
 
-    const setTheme = (theme) => {
+    const setTheme = (theme, animate = false) => {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-        const hljsTheme = document.getElementById('hljs-theme');
-        if (hljsTheme) {
-            hljsTheme.href = theme === 'dark' 
-                ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css' 
-                : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css';
+
+        if (animate) {
+            themeBtn.classList.remove('theme-animating');
+            void themeBtn.offsetWidth; // trigger reflow
+            themeBtn.classList.add('theme-animating');
         }
 
-        const icon = document.getElementById('theme-icon');
-        if(icon) {
-            if (theme === 'dark') {
-                icon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
-            } else {
-                icon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-            }
+        if (theme === 'dark') {
+            themeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+        } else {
+            themeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
         }
     };
     
-    setTheme(localStorage.getItem('theme') || 'light');
-    themeBtn.onclick = () => setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    setTheme(localStorage.getItem('theme') || 'light', false);
 
-    // 2. Render Markdown & Meta
+    themeBtn.onclick = () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(nextTheme, true);
+    };
+
+    // 3. Render Markdown & Syntax Highlighting
     const mdBody = document.getElementById('markdown-body');
     if (mdBody && typeof rawMarkdown !== 'undefined' && typeof marked !== 'undefined') {
         const renderer = new marked.Renderer();
         const originalCode = renderer.code;
         renderer.code = function(code, language, isEscaped) {
             const rendered = originalCode.call(this, code, language, isEscaped);
-            return rendered.replace('<pre>', '<pre><div class="mac-window-header"><div class="mac-dots"><div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div></div><div class="code-lang-label">' + (language || 'text') + '</div><button class="copy-btn-floating">Copy</button></div>');
+            return rendered.replace(
+                '<pre>', 
+                '<pre><div class="mac-window-header"><div class="mac-dots"><div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div></div><div class="code-lang-label">' + (language || 'text') + '</div><button class="copy-btn-floating">Copy</button></div>'
+            );
         };
         
         marked.setOptions({ renderer: renderer });
         mdBody.innerHTML = marked.parse(rawMarkdown);
-        // Trigger MathJax after parsing markdown
+
+        // MathJax Trigger
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-            MathJax.typesetPromise([mdBody]).catch(function (err) { console.error('MathJax error:', err.message); });
+            MathJax.typesetPromise([mdBody]).catch(err => console.error('MathJax error:', err.message));
         }
 
-
-        
-
-        // Code Copy
+        // Code Copy Interaction
         document.querySelectorAll('.markdown-body pre').forEach(pre => {
             const btn = pre.querySelector('.copy-btn-floating');
-            const code = pre.querySelector('code');
-            if (btn && code) {
-                btn.onclick = () => {
-                    navigator.clipboard.writeText(code.innerText);
-                    btn.innerText = 'Copied!';
-                    setTimeout(() => btn.innerText = 'Copy', 2000);
+            const codeEl = pre.querySelector('code');
+            if (btn && codeEl) {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(codeEl.innerText);
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<span style="color:#10b981;font-weight:600;">✓ Copied</span>';
+                    btn.style.borderColor = '#10b981';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.style.borderColor = '';
+                    }, 1800);
                 };
             }
         });
 
-        // TOC in Right Sidebar
-        
-        if (true) {
+        // 4. Table of Contents in Right Sidebar
+        const headings = mdBody.querySelectorAll('h2, h3');
+        if (headings.length > 0) {
             const rightSidebar = document.createElement('div');
             rightSidebar.id = 'right-sidebar';
             
             const tocContainer = document.createElement('div');
             tocContainer.id = 'toc-container';
-            tocContainer.innerHTML = '<div class="toc-title">Mục lục</div>';
             
-            document.querySelectorAll('.markdown-body h2, .markdown-body h3').forEach((h, i) => {
-                h.id = h.id || 'h-' + i;
-                const link = document.createElement('a');
-                link.href = '#' + h.id;
-                link.className = 'toc-item';
-                link.innerText = h.innerText;
-                link.style.paddingLeft = h.tagName === 'H3' ? '15px' : '0';
-                link.onclick = (e) => { e.preventDefault(); h.scrollIntoView({behavior: 'smooth'}); };
-                tocContainer.appendChild(link);
+            const tocTitle = document.createElement('div');
+            tocTitle.className = 'toc-title';
+            tocTitle.innerText = 'MỤC LỤC';
+            tocContainer.appendChild(tocTitle);
+
+            headings.forEach((h, index) => {
+                const text = h.innerText.replace(/^#+\s*/, '').trim();
+                // Skip duplicate "MỤC LỤC" heading if any
+                if (text.toUpperCase() === 'MỤC LỤC') return;
+
+                if (!h.id) {
+                    h.id = 'heading-' + index;
+                }
+                
+                const item = document.createElement('a');
+                item.className = 'toc-item' + (h.tagName === 'H3' ? ' indent' : '');
+                item.href = '#' + h.id;
+                item.innerText = text;
+                
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    history.pushState(null, null, '#' + h.id);
+                    h.scrollIntoView({ behavior: 'smooth' });
+                };
+                
+                tocContainer.appendChild(item);
             });
-            
+
             rightSidebar.appendChild(tocContainer);
             document.body.appendChild(rightSidebar);
-        }
 
-        // Selection Menu
-        const selMenu = document.createElement('div');
-        selMenu.id = 'selection-menu';
-        selMenu.innerHTML = `
-            <button id="sel-highlight"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg> Highlight</button>
-            <button id="sel-copy"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy</button>
-            
-        `;
-        document.body.appendChild(selMenu);
+            // Heading Anchors (#)
+            headings.forEach(h => {
+                if (h.innerText.trim().toUpperCase() === 'MỤC LỤC') return;
 
-        let selTimeout;
-        document.addEventListener('selectionchange', () => {
-            clearTimeout(selTimeout);
-            selTimeout = setTimeout(() => {
-                const sel = window.getSelection();
-                if(sel.rangeCount > 0 && sel.toString().trim().length > 0) {
-                    const rect = sel.getRangeAt(0).getBoundingClientRect();
-                    selMenu.style.display = 'flex';
-                    selMenu.style.top = (rect.top + window.scrollY - 45) + 'px';
-                    selMenu.style.left = (rect.left + window.scrollX + rect.width/2) + 'px';
-                } else {
-                    selMenu.style.display = 'none';
-                }
-            }, 100);
-        });
-        
-        document.getElementById('sel-copy').onclick = () => { navigator.clipboard.writeText(window.getSelection().toString()); selMenu.style.display = 'none'; };
-        document.getElementById('sel-highlight').onclick = () => {
-            try { window.getSelection().getRangeAt(0).surroundContents(document.createElement('mark')); } 
-            catch(e) { document.execCommand('hiliteColor', false, document.documentElement.getAttribute('data-theme') === 'dark' ? '#ca8a04' : '#fef08a'); }
-            window.getSelection().removeAllRanges();
-            selMenu.style.display = 'none';
-        };
-
-        
-        // Add Keyboard Shortcuts Modal/Toast (Invisible, just listeners)
-        document.addEventListener('keydown', (e) => {
-            // Ignore if in input
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            // 'T' to toggle theme
-            if (e.key.toLowerCase() === 't') {
-                const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                setTheme(newTheme);
-            }
-            // 'Z' to toggle Zen Mode
-            if (e.key.toLowerCase() === 'z') {
-                document.body.classList.toggle('focus-mode');
-                updateZenBtnState();
-            }
-        });
-
-        // Add Heading Anchors
-        if (headings.length > 0) {
-            headings.forEach((h, index) => {
                 const anchor = document.createElement('a');
                 anchor.href = '#' + h.id;
                 anchor.className = 'heading-anchor';
-                anchor.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
-                anchor.title = "Copy link to heading";
+                anchor.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+                anchor.title = 'Copy link đến mục này';
                 
                 anchor.onclick = (e) => {
                     e.preventDefault();
                     navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + h.id);
-                    const originalHTML = anchor.innerHTML;
-                    anchor.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-                    setTimeout(() => anchor.innerHTML = originalHTML, 1500);
+                    const orig = anchor.innerHTML;
+                    anchor.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    setTimeout(() => anchor.innerHTML = orig, 1500);
                     window.history.pushState(null, null, '#' + h.id);
                     h.scrollIntoView({ behavior: 'smooth' });
                 };
                 
                 h.insertBefore(anchor, h.firstChild);
             });
+
+            // ScrollSpy for Active TOC Item
+            const tocItems = document.querySelectorAll('.toc-item');
+            const scrollSpy = () => {
+                let currentId = null;
+                let minDistance = Infinity;
+                
+                headings.forEach(h => {
+                    const rect = h.getBoundingClientRect();
+                    if (rect.top >= -60 && rect.top < window.innerHeight / 2.5) {
+                        if (rect.top < minDistance) {
+                            minDistance = rect.top;
+                            currentId = h.id;
+                        }
+                    }
+                });
+                
+                if (!currentId) {
+                    for (let i = headings.length - 1; i >= 0; i--) {
+                        if (headings[i].getBoundingClientRect().top < 0) {
+                            currentId = headings[i].id;
+                            break;
+                        }
+                    }
+                }
+
+                tocItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (currentId && item.getAttribute('href') === '#' + currentId) {
+                        item.classList.add('active');
+                    }
+                });
+            };
+            
+            window.addEventListener('scroll', scrollSpy, { passive: true });
+            setTimeout(scrollSpy, 300);
         }
 
-        // ScrollSpy for Active TOC
-        const tocItems = document.querySelectorAll('.toc-item');
-        const scrollSpy = () => {
-            let currentId = null;
-            let minDistance = Infinity;
-            
-            headings.forEach(h => {
-                const rect = h.getBoundingClientRect();
-                // Check if heading is above the middle of viewport
-                if (rect.top >= -50 && rect.top < window.innerHeight / 2) {
-                    if (rect.top < minDistance) {
-                        minDistance = rect.top;
-                        currentId = h.id;
-                    }
-                }
-            });
-            
-            // Fallback if scrolling past all, pick the last one that is above viewport
-            if (!currentId) {
-                for (let i = headings.length - 1; i >= 0; i--) {
-                    if (headings[i].getBoundingClientRect().top < 0) {
-                        currentId = headings[i].id;
-                        break;
-                    }
-                }
-            }
+        // 5. Reading Progress Bar
+        const progContainer = document.createElement('div');
+        progContainer.id = 'reading-progress-container';
+        const progBar = document.createElement('div');
+        progBar.id = 'reading-progress';
+        progContainer.appendChild(progBar);
+        document.body.appendChild(progContainer);
 
-            tocItems.forEach(item => {
-                item.classList.remove('active');
-                if (currentId && item.getAttribute('href') === '#' + currentId) {
-                    item.classList.add('active');
-                }
-            });
-        };
-        
-        window.addEventListener('scroll', scrollSpy, {passive: true});
-        setTimeout(scrollSpy, 500); // Initial check
-
-        // Progress Bar
-        const progressContainer = document.createElement('div');
-        progressContainer.id = 'reading-progress-container';
-        progressContainer.innerHTML = '<div id="reading-progress-bar"></div>';
-        document.body.appendChild(progressContainer);
         window.addEventListener('scroll', () => {
-            const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-            document.getElementById('reading-progress-bar').style.width = scrolled + '%';
-        });
+            const h = document.documentElement;
+            const b = document.body;
+            const st = 'scrollTop' in h ? h.scrollTop : b.scrollTop;
+            const sh = 'scrollHeight' in h ? h.scrollHeight : b.scrollHeight;
+            const percent = (st / (sh - h.clientHeight)) * 100;
+            progBar.style.width = Math.min(100, Math.max(0, percent)) + '%';
+        }, { passive: true });
 
-        // ELEGANT AI CHATBOT
-        const chatHtml = `
-            <button id="ai-chat-btn" title="Hỏi AI"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
-            <div id="ai-chat-window">
-                <div id="ai-chat-header">
-                    <span>✨ Trợ giảng AI</span>
-                    <button id="ai-chat-close" style="background:none;border:none;color:var(--text-main);cursor:pointer;font-size:1.5rem;line-height:1;">&times;</button>
-                </div>
-                <div id="ai-chat-messages">
-                    <div class="chat-msg bot">Chào bạn! Mình có thể giải thích chi tiết hơn bất cứ khái niệm nào bạn thắc mắc.</div>
-                </div>
-                <div class="chat-suggestions">
-                    <div class="chat-suggestion-chip">📝 Tóm tắt bài viết</div>
-                    <div class="chat-suggestion-chip">🃏 Tạo Flashcard</div>
-                    <div class="chat-suggestion-chip">🧐 Giải thích False Sharing</div>
-                </div>
-                <div id="ai-chat-input-area">
-                    <input type="text" id="ai-chat-input" placeholder="Hỏi gì đó...">
-                    <button id="ai-chat-send"><svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/></svg></button>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', chatHtml);
-
-        const chatBtn = document.getElementById('ai-chat-btn');
-        const chatWindow = document.getElementById('ai-chat-window');
-        const chatInput = document.getElementById('ai-chat-input');
-        const chatMessages = document.getElementById('ai-chat-messages');
-        let chatHistory = [];
-
-        chatBtn.onclick = () => chatWindow.classList.add('show');
-        document.getElementById('ai-chat-close').onclick = () => chatWindow.classList.remove('show');
-
-        const addMsg = (text, sender) => {
-            const div = document.createElement('div');
-            div.className = 'chat-msg ' + sender;
-            if(sender === 'bot') div.innerHTML = marked.parse(text);
-            else div.innerText = text;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        };
-
-        const callAI = async (prompt) => {
-            addMsg("Đang suy nghĩ...", "bot");
-            const loadingDiv = chatMessages.lastChild;
-            const systemPrompt = "Bạn là Trợ lý AI. Trả lời bằng tiếng Việt, ngắn gọn, dùng Markdown. Bài viết: " + mdBody.innerText.substring(0, 3000);
-            if(chatHistory.length === 0) chatHistory.push({role: 'system', content: systemPrompt});
-            chatHistory.push({role: 'user', content: prompt});
+        // 6. Keyboard Shortcuts Listener
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
             
-            try {
-                const res = await fetch('https://text.pollinations.ai/', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({messages: chatHistory, model: 'openai'})
-                });
-                const text = await res.text();
-                chatMessages.removeChild(loadingDiv);
-                addMsg(text, 'bot');
-                chatHistory.push({role: 'assistant', content: text});
-                if(chatHistory.length > 7) chatHistory.splice(1, 2);
-            } catch(e) {
-                chatMessages.removeChild(loadingDiv);
-                addMsg("Lỗi kết nối mạng.", 'bot');
+            // 'T' to toggle theme
+            if (e.key.toLowerCase() === 't') {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(nextTheme, true);
             }
-        };
-
-        const send = () => {
-            const val = chatInput.value.trim();
-            if(val) { addMsg(val, 'user'); chatInput.value = ''; callAI(val); }
-        };
-        document.getElementById('ai-chat-send').onclick = send;
-        chatInput.onkeydown = (e) => { if(e.key === 'Enter') send(); };
-        
-        document.querySelectorAll('.chat-suggestion-chip').forEach(chip => {
-            chip.onclick = () => { chatInput.value = chip.innerText.replace(/[📝🃏🧐]/g, '').trim(); send(); };
+            // 'Z' to toggle Zen Mode
+            if (e.key.toLowerCase() === 'z') {
+                document.body.classList.toggle('focus-mode');
+            }
         });
-
-            }
+    }
 });
