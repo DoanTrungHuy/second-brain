@@ -238,3 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// Remove preload to enable smooth transitions after initial paint
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        document.documentElement.classList.remove('preload');
+    }, 50);
+});

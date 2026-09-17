@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <script>
+        (function() {
+            try {
+                document.documentElement.classList.add('preload');
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        html[data-theme="dark"], html[data-theme="dark"] body {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+        }
+        html.preload, html.preload * {
+            transition: none !important;
+        }
+    </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giao thức MESI: Đồng bộ Cache Đa nhân (Cache Coherence) | System Knowledge</title>
@@ -87,7 +109,7 @@
         }
     </style>
 
-<link rel="stylesheet" href="custom.css?v=37">
+<link rel="stylesheet" href="custom.css?v=38">
 </head>
 <body>
     <div class="mobile-header">
@@ -321,6 +343,6 @@ Giả sử ban đầu ô nhớ \`X\` tại địa chỉ RAM vật lý \`0x00A1F0
             });
         });
     </script>
-<script src="custom.js?v=37"></script>
+<script src="custom.js?v=38"></script>
 </body>
 </html>

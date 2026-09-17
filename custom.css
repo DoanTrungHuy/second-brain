@@ -1,3 +1,13 @@
+/* PRELOAD - Prevent Transition Glitch on Page Load */
+html.preload, 
+html.preload * {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+
 /* ==========================================================================
    SYSTEM KNOWLEDGE - ULTRA MODERN & SMOOTH STYLESHEET
    ========================================================================== */
