@@ -1,5 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
+    // 0. GLOBAL TOAST NOTIFICATION SYSTEM
+    // ==========================================================================
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    document.body.appendChild(toastContainer);
+
+    const showToast = (message, duration = 2600) => {
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.innerHTML = `
+            <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>${message}</span>
+        `;
+        toastContainer.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    };
+
+    // ==========================================================================
     // 1. MOBILE SIDEBAR TOGGLE
     // ==========================================================================
     const menuBtn = document.querySelector('.menu-btn');
@@ -51,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             themeBtn.classList.remove('theme-animating');
             void themeBtn.offsetWidth;
             themeBtn.classList.add('theme-animating');
+            showToast(theme === 'dark' ? '🌙 Đã chuyển sang giao diện Tối' : '☀️ Đã chuyển sang giao diện Sáng');
         }
 
         if (theme === 'dark') {
@@ -79,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rendered = originalCode.call(this, code, language, isEscaped);
             return rendered.replace(
                 '<pre>', 
-                '<pre><div class="mac-window-header"><div class="mac-dots"><div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div></div><div class="code-lang-label">' + (language || 'text') + '</div><div style="display:flex;align-items:center;"><button class="code-wrap-toggle" title="Tự động xuống dòng">Wrap</button><button class="copy-btn-floating">Copy</button></div></div>'
+                '<pre><div class="mac-window-header"><div class="mac-dots"><div class="mac-dot red" title="Đóng"></div><div class="mac-dot yellow" title="Thu nhỏ"></div><div class="mac-dot green" title="Phóng to đoạn mã"></div></div><div class="code-lang-label">' + (language || 'text') + '</div><div style="display:flex;align-items:center;"><button class="code-wrap-toggle" title="Tự động xuống dòng">Wrap</button><button class="code-expand-toggle" title="Phóng to đoạn mã"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Expand</button><button class="copy-btn-floating">Copy</button></div></div>'
             );
         };
         
@@ -91,10 +119,29 @@ document.addEventListener('DOMContentLoaded', () => {
             MathJax.typesetPromise([mdBody]).catch(err => console.error('MathJax error:', err.message));
         }
 
-        // Code Block Actions (Copy & Word Wrap)
+        // Code Block Fullscreen Backdrop
+        const codeBackdrop = document.createElement('div');
+        codeBackdrop.className = 'code-expand-backdrop';
+        codeBackdrop.style.display = 'none';
+        document.body.appendChild(codeBackdrop);
+
+        const closeExpandedCode = () => {
+            document.querySelectorAll('.markdown-body pre.code-expanded').forEach(p => {
+                p.classList.remove('code-expanded');
+                const btn = p.querySelector('.code-expand-toggle');
+                if (btn) btn.classList.remove('active');
+            });
+            codeBackdrop.style.display = 'none';
+        };
+
+        codeBackdrop.onclick = closeExpandedCode;
+
+        // Code Block Actions (Copy, Word Wrap & Fullscreen Expand)
         document.querySelectorAll('.markdown-body pre').forEach(pre => {
             const copyBtn = pre.querySelector('.copy-btn-floating');
             const wrapBtn = pre.querySelector('.code-wrap-toggle');
+            const expandBtn = pre.querySelector('.code-expand-toggle');
+            const greenDot = pre.querySelector('.mac-dot.green');
             const codeEl = pre.querySelector('code');
             
             if (copyBtn && codeEl) {
@@ -104,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const origText = copyBtn.innerHTML;
                     copyBtn.innerHTML = '<span style="color:#10b981;font-weight:600;">✓ Copied</span>';
                     copyBtn.style.borderColor = '#10b981';
+                    showToast('✓ Đã sao chép mã nguồn vào bộ nhớ tạm!');
                     setTimeout(() => {
                         copyBtn.innerHTML = origText;
                         copyBtn.style.borderColor = '';
@@ -118,6 +166,128 @@ document.addEventListener('DOMContentLoaded', () => {
                     wrapBtn.classList.toggle('active');
                 };
             }
+
+            const toggleExpand = (e) => {
+                if (e) e.stopPropagation();
+                const isExp = pre.classList.toggle('code-expanded');
+                if (expandBtn) expandBtn.classList.toggle('active', isExp);
+                if (isExp) {
+                    codeBackdrop.style.display = 'block';
+                    showToast('Đã phóng to đoạn mã. Nhấn Esc để đóng.');
+                } else {
+                    codeBackdrop.style.display = 'none';
+                }
+            };
+
+            if (expandBtn) expandBtn.onclick = toggleExpand;
+            if (greenDot) greenDot.onclick = toggleExpand;
+        });
+
+        // Callouts / Admonitions Transformation
+        mdBody.querySelectorAll('blockquote').forEach(bq => {
+            const html = bq.innerHTML.trim();
+            const match = html.match(/^\s*<p>\s*\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*(?:<br\s*\/?>)?([\s\S]*)/i);
+            if (match) {
+                const type = match[1].toLowerCase();
+                const rest = match[2];
+                const titles = {
+                    note: 'Ghi chú (Note)',
+                    tip: 'Mẹo hữu ích (Tip)',
+                    warning: 'Cảnh báo (Warning)',
+                    important: 'Quan trọng (Important)',
+                    caution: 'Lưu ý (Caution)'
+                };
+                const icons = {
+                    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+                    tip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path><circle cx="12" cy="12" r="4"></circle></svg>',
+                    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+                    important: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+                    caution: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+                };
+                const callout = document.createElement('div');
+                callout.className = `callout callout-${type}`;
+                callout.innerHTML = `
+                    <div class="callout-title">${icons[type] || icons.note} <span>${titles[type] || type.toUpperCase()}</span></div>
+                    <p>${rest}
+                `;
+                bq.replaceWith(callout);
+            }
+        });
+
+        // Article Meta Bar (Reading time, words, share, print, zen)
+        const mainH1 = mdBody.querySelector('h1');
+        if (mainH1) {
+            const rawText = mdBody.innerText || '';
+            const words = rawText.trim().split(/\s+/).filter(Boolean).length;
+            const readingTime = Math.max(1, Math.ceil(words / 220));
+
+            const metaBar = document.createElement('div');
+            metaBar.className = 'article-meta-bar';
+            metaBar.innerHTML = `
+                <div class="meta-badge" title="Thời gian đọc dự kiến">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>~${readingTime} phút đọc</span>
+                </div>
+                <div class="meta-divider"></div>
+                <div class="meta-badge" title="Độ dài bài viết">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>${words.toLocaleString()} từ</span>
+                </div>
+                <div class="meta-actions">
+                    <button class="meta-btn" id="btn-share-article" title="Sao chép liên kết chia sẻ">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        <span>Chia sẻ</span>
+                    </button>
+                    <button class="meta-btn" id="btn-print-article" title="In hoặc lưu PDF">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        <span>In / PDF</span>
+                    </button>
+                    <button class="meta-btn" id="btn-zen-mode" title="Chế độ đọc tập trung (Phím: Z)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                        <span>Zen Mode</span>
+                    </button>
+                </div>
+            `;
+            mainH1.insertAdjacentElement('afterend', metaBar);
+
+            metaBar.querySelector('#btn-share-article')?.addEventListener('click', () => {
+                navigator.clipboard.writeText(window.location.href);
+                showToast('✓ Đã sao chép liên kết bài viết vào clipboard!');
+            });
+
+            metaBar.querySelector('#btn-print-article')?.addEventListener('click', () => {
+                window.print();
+            });
+
+            metaBar.querySelector('#btn-zen-mode')?.addEventListener('click', () => {
+                document.body.classList.toggle('focus-mode');
+                if (document.body.classList.contains('focus-mode')) {
+                    showToast('Chế độ tập trung (Zen Mode) đã kích hoạt! Nhấn Z để thoát.');
+                } else {
+                    showToast('Đã thoát chế độ tập trung.');
+                }
+            });
+        }
+
+        // Image Lightbox Modal
+        const lightbox = document.createElement('div');
+        lightbox.id = 'image-lightbox';
+        lightbox.innerHTML = '<img src="" alt="Phóng to hình ảnh">';
+        document.body.appendChild(lightbox);
+        const lightboxImg = lightbox.querySelector('img');
+
+        mdBody.querySelectorAll('img').forEach(img => {
+            img.title = img.title || 'Nhấn để phóng to hình ảnh';
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                lightboxImg.src = img.src;
+                lightboxImg.alt = img.alt || 'Hình ảnh';
+                lightbox.classList.add('show');
+            });
+        });
+
+        lightbox.addEventListener('click', () => {
+            lightbox.classList.remove('show');
         });
 
         // ======================================================================
@@ -282,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 6. READING PROGRESS BAR
+    // 6. READING PROGRESS BAR & CIRCULAR BACK TO TOP
     // ==========================================================================
     const progContainer = document.createElement('div');
     progContainer.id = 'reading-progress-container';
@@ -291,26 +461,41 @@ document.addEventListener('DOMContentLoaded', () => {
     progContainer.appendChild(progBar);
     document.body.appendChild(progContainer);
 
+    const backToTopBtn = document.createElement('button');
+    backToTopBtn.id = 'back-to-top';
+    backToTopBtn.title = 'Cuộn lên đầu trang (Phím tắt: Alt+↑)';
+    const radius = 20;
+    const circumference = 2 * Math.PI * radius; // ~125.66
+
+    backToTopBtn.innerHTML = `
+        <svg class="progress-ring" width="48" height="48">
+            <circle class="progress-ring__circle-bg" cx="24" cy="24" r="${radius}"></circle>
+            <circle class="progress-ring__circle" cx="24" cy="24" r="${radius}" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}"></circle>
+        </svg>
+        <div class="back-to-top-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        </div>
+    `;
+    document.body.appendChild(backToTopBtn);
+
+    const circleProgress = backToTopBtn.querySelector('.progress-ring__circle');
+
     window.addEventListener('scroll', () => {
         const h = document.documentElement;
         const b = document.body;
         const st = 'scrollTop' in h ? h.scrollTop : b.scrollTop;
         const sh = 'scrollHeight' in h ? h.scrollHeight : b.scrollHeight;
-        const percent = (st / (sh - h.clientHeight)) * 100;
+        const scrollMax = sh - h.clientHeight;
+        const percent = scrollMax > 0 ? (st / scrollMax) * 100 : 0;
+
         progBar.style.width = Math.min(100, Math.max(0, percent)) + '%';
-    }, { passive: true });
 
-    // ==========================================================================
-    // 7. SMOOTH FLOATING BACK TO TOP BUTTON
-    // ==========================================================================
-    const backToTopBtn = document.createElement('button');
-    backToTopBtn.id = 'back-to-top';
-    backToTopBtn.title = 'Cuộn lên đầu trang';
-    backToTopBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>';
-    document.body.appendChild(backToTopBtn);
+        if (circleProgress) {
+            const offset = circumference - (Math.min(100, Math.max(0, percent)) / 100) * circumference;
+            circleProgress.style.strokeDashoffset = offset;
+        }
 
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) {
+        if (window.scrollY > 350) {
             backToTopBtn.classList.add('visible');
         } else {
             backToTopBtn.classList.remove('visible');
@@ -322,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================================================
-    // 8. SPOTLIGHT SEARCH MODAL (Ctrl + K)
+    // 7. SPOTLIGHT SEARCH MODAL (Ctrl + K)
     // ==========================================================================
     const searchModal = document.createElement('div');
     searchModal.id = 'spotlight-modal';
@@ -331,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="spotlight-header">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <input type="text" class="spotlight-input" placeholder="Tìm kiếm kiến thức, thuật ngữ (VIPT, SpinLock, Malloc...)" autofocus>
-                <div class="spotlight-esc">ESC</div>
+                <div class="spotlight-esc" id="spotlight-close-btn" style="cursor:pointer;">ESC</div>
             </div>
             <div class="spotlight-results">
                 <div class="spotlight-empty">Gõ từ khóa bất kỳ để tìm kiếm toàn bộ tài liệu...</div>
@@ -379,6 +564,8 @@ document.addEventListener('DOMContentLoaded', () => {
         searchModal.classList.remove('show');
         spotlightInput.value = '';
     };
+
+    searchModal.querySelector('#spotlight-close-btn')?.addEventListener('click', closeSpotlight);
 
     searchModal.addEventListener('click', (e) => {
         if (e.target === searchModal) closeSpotlight();
@@ -437,7 +624,103 @@ document.addEventListener('DOMContentLoaded', () => {
     spotlightInput.addEventListener('input', renderResults);
 
     // ==========================================================================
-    // 9. GLOBAL KEYBOARD SHORTCUTS
+    // 8. KEYBOARD SHORTCUTS CHEATSHEET MODAL & HELPER BUTTON
+    // ==========================================================================
+    const kbdBtn = document.createElement('button');
+    kbdBtn.id = 'kbd-shortcuts-btn';
+    kbdBtn.title = 'Phím tắt tra cứu (Phím: ?)';
+    kbdBtn.innerHTML = '?';
+    document.body.appendChild(kbdBtn);
+
+    const kbdModal = document.createElement('div');
+    kbdModal.id = 'kbd-modal';
+    kbdModal.innerHTML = `
+        <div class="kbd-modal-card">
+            <div class="kbd-modal-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="8" y1="12" x2="8.01" y2="12"></line><line x1="12" y1="12" x2="12.01" y2="12"></line><line x1="16" y1="12" x2="16.01" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+                    Phím tắt thao tác nhanh
+                </div>
+                <div class="spotlight-esc" style="cursor:pointer;" id="kbd-close-btn">ESC</div>
+            </div>
+            <div class="kbd-grid">
+                <div class="kbd-row">
+                    <span>Tìm kiếm Spotlight toàn trang</span>
+                    <div class="kbd-key-group"><kbd>Ctrl</kbd><kbd>K</kbd></div>
+                </div>
+                <div class="kbd-row">
+                    <span>Chuyển đổi giao diện Sáng / Tối</span>
+                    <div class="kbd-key-group"><kbd>T</kbd></div>
+                </div>
+                <div class="kbd-row">
+                    <span>Bật / Tắt chế độ đọc tập trung (Zen Mode)</span>
+                    <div class="kbd-key-group"><kbd>Z</kbd></div>
+                </div>
+                <div class="kbd-row">
+                    <span>Mở bảng danh sách phím tắt</span>
+                    <div class="kbd-key-group"><kbd>?</kbd></div>
+                </div>
+                <div class="kbd-row">
+                    <span>Cuộn lên đầu trang tức thì</span>
+                    <div class="kbd-key-group"><kbd>Alt</kbd><kbd>↑</kbd></div>
+                </div>
+                <div class="kbd-row">
+                    <span>Đóng mọi popup / modal đang mở</span>
+                    <div class="kbd-key-group"><kbd>Esc</kbd></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(kbdModal);
+
+    const openKbdModal = () => kbdModal.classList.add('show');
+    const closeKbdModal = () => kbdModal.classList.remove('show');
+
+    kbdBtn.onclick = openKbdModal;
+    kbdModal.querySelector('#kbd-close-btn')?.addEventListener('click', closeKbdModal);
+    kbdModal.onclick = (e) => {
+        if (e.target === kbdModal) closeKbdModal();
+    };
+
+    // ==========================================================================
+    // 9. INTERACTIVE RIPPLES & SCROLL REVEAL
+    // ==========================================================================
+    function createRipple(e) {
+        const el = e.currentTarget;
+        const rect = el.getBoundingClientRect();
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple-wave';
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+        ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+        el.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+    }
+
+    document.querySelectorAll('.meta-btn, .post-nav-card, .theme-toggle, #back-to-top, #kbd-shortcuts-btn, .copy-btn-floating').forEach(btn => {
+        btn.classList.add('has-ripple');
+        btn.addEventListener('pointerdown', createRipple);
+    });
+
+    if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -30px 0px', threshold: 0.08 });
+
+        document.querySelectorAll('.markdown-body h2, .markdown-body h3, .markdown-body pre, .markdown-body table, .callout, .post-navigation').forEach(el => {
+            el.classList.add('reveal-on-scroll');
+            revealObserver.observe(el);
+        });
+    }
+
+    // ==========================================================================
+    // 10. GLOBAL KEYBOARD SHORTCUTS
     // ==========================================================================
     document.addEventListener('keydown', (e) => {
         // Ctrl+K / Cmd+K to open search
@@ -482,7 +765,38 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Escape closes any open modal
+        if (e.key === 'Escape') {
+            closeSpotlight();
+            closeKbdModal();
+            lightbox.classList.remove('show');
+            const codeBackdrop = document.querySelector('.code-expand-backdrop');
+            if (codeBackdrop && codeBackdrop.style.display !== 'none') {
+                document.querySelectorAll('.markdown-body pre.code-expanded').forEach(p => p.classList.remove('code-expanded'));
+                codeBackdrop.style.display = 'none';
+            }
+            return;
+        }
+
+        // Alt + ArrowUp to scroll to top
+        if (e.altKey && e.key === 'ArrowUp') {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        // '?' to toggle Shortcuts Modal
+        if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+            e.preventDefault();
+            if (kbdModal.classList.contains('show')) {
+                closeKbdModal();
+            } else {
+                openKbdModal();
+            }
+            return;
+        }
         
         // 'T' to toggle theme
         if (e.key.toLowerCase() === 't') {
@@ -490,9 +804,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
             setTheme(nextTheme, true);
         }
+
         // 'Z' to toggle Zen Mode
         if (e.key.toLowerCase() === 'z') {
             document.body.classList.toggle('focus-mode');
+            if (document.body.classList.contains('focus-mode')) {
+                showToast('Chế độ tập trung (Zen Mode) đã kích hoạt! Nhấn Z để thoát.');
+            } else {
+                showToast('Đã thoát chế độ tập trung.');
+            }
         }
     });
 });
