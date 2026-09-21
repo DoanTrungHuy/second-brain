@@ -52,7 +52,7 @@ Giả sử qua phép tính phân rã bit địa chỉ:
 | Thành phần | Giá trị | Ý nghĩa / Giải thích chi tiết |
 | :--- | :--- | :--- |
 | **Valid Bit** | `1` | Dòng Cache đang chứa dữ liệu hợp lệ |
-| **Tag Store** | `0x00401` | $\longleftarrow$ Trùng với phần Tag của địa chỉ `&arr[0]` (`0x00401200`) |
+| **Tag Store** | `0x00401` | ← Trùng với phần Tag của địa chỉ `&arr[0]` (`0x00401200`) |
 | **Data Block** | `[Giá trị 64 Bytes: arr[0], arr[1], ..., arr[15]]` | 16 phần tử kiểu `int` đầu tiên của mảng |
 
 **CACHE LINE SỐ 9** *(Xác định nhờ Index = 9)*
@@ -60,7 +60,7 @@ Giả sử qua phép tính phân rã bit địa chỉ:
 | Thành phần | Giá trị | Ý nghĩa / Giải thích chi tiết |
 | :--- | :--- | :--- |
 | **Valid Bit** | `1` | Dòng Cache đang chứa dữ liệu hợp lệ |
-| **Tag Store** | `0x00401` | $\longleftarrow$ Trùng với phần Tag của địa chỉ `&arr[16]` (`0x00401240`) |
+| **Tag Store** | `0x00401` | ← Trùng với phần Tag của địa chỉ `&arr[16]` (`0x00401240`) |
 | **Data Block** | `[Giá trị 64 Bytes: arr[16], arr[17], ..., arr[31]]` | 16 phần tử kiểu `int` tiếp theo của mảng |
 
 ### 2.3 Diễn biến từng bước khi CPU thực hiện lệnh: `int x = arr[5];`

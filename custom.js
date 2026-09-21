@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Table Responsive Scroll Wrapper with Shadow Indicator
+        // Table Responsive Scroll Wrapper
         mdBody.querySelectorAll('table').forEach(table => {
             if (table.parentElement.classList.contains('table-inner')) return;
             const wrapper = document.createElement('div');
@@ -302,14 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
             table.parentNode.insertBefore(wrapper, table);
             inner.appendChild(table);
             wrapper.appendChild(inner);
-
-            const updateScrollHint = () => {
-                const hasMoreToScroll = inner.scrollWidth > inner.clientWidth && (inner.scrollLeft + inner.clientWidth < inner.scrollWidth - 8);
-                wrapper.classList.toggle('can-scroll-right', hasMoreToScroll);
-            };
-            inner.addEventListener('scroll', updateScrollHint, { passive: true });
-            window.addEventListener('resize', updateScrollHint, { passive: true });
-            setTimeout(updateScrollHint, 200);
         });
 
         // MathJax Typeset Trigger
@@ -423,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.style.setProperty('--spotlight-y', `${y}px`);
             });
         };
-        mdBody.querySelectorAll('pre, .callout, table').forEach(applySpotlight);
+        mdBody.querySelectorAll('pre, .callout').forEach(applySpotlight);
 
         // Reading Time Pill & Share Button
         const articleText = mdBody.innerText || '';
@@ -1166,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mouse-Tracking Spotlight Glow on Cards and Containers
     const attachSpotlightGlow = () => {
-        document.querySelectorAll('.markdown-body pre, .post-nav-card, .callout, .spotlight-card, .table-scroll-wrapper').forEach(el => {
+        document.querySelectorAll('.markdown-body pre, .post-nav-card, .callout, .spotlight-card').forEach(el => {
             el.classList.add('spotlight-card-hover');
             el.addEventListener('pointermove', (e) => {
                 const rect = el.getBoundingClientRect();

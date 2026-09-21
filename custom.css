@@ -2231,7 +2231,7 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
     transform: scale(1);
 }
 
-/* --- TABLE SCROLL CONTAINER WITH HORIZONTAL HINT --- */
+/* --- TABLE SCROLL CONTAINER --- */
 .table-scroll-wrapper {
     position: relative;
     width: 100%;
@@ -2245,12 +2245,15 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
 
 .table-scroll-wrapper .table-inner {
     overflow-x: auto;
+    overflow-y: hidden;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table-scroll-wrapper table {
     margin: 0 !important;
     border: none !important;
+    width: 100%;
 }
 
 .table-scroll-wrapper table th {
@@ -2259,27 +2262,6 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
 
 .table-scroll-wrapper table tr:last-child td {
     border-bottom: none;
-}
-
-.table-scroll-wrapper::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 32px;
-    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08));
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.25s ease;
-}
-
-[data-theme="dark"] .table-scroll-wrapper::after {
-    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.45));
-}
-
-.table-scroll-wrapper.can-scroll-right::after {
-    opacity: 1;
 }
 
 /* --- CODE BLOCK LANGUAGE BADGES WITH SPECIALIZED ACCENTS --- */
