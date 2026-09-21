@@ -76,28 +76,42 @@ body,
 .markdown-body, 
 .mac-window-header, 
 .search-box input, 
+body, 
+#sidebar, 
+#main-content, 
+.article-container, 
+#right-sidebar, 
+.sticky-topbar,
 .nav-item, 
-.toc-item, 
+.category-title,
+.callout, 
 pre, 
 code, 
-blockquote, 
 table, 
 th, 
 td, 
-h1, 
-h2, 
-h3, 
-h4, 
-p, 
-li, 
+blockquote, 
+.card, 
+.post-nav-card, 
+.toc-container,
+.heading-anchor,
+h1, h2, h3, h4, h5, h6,
+p, li, span, a,
+button,
+input,
 svg,
-.copy-btn-floating {
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                fill 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.copy-btn-floating,
+.code-wrap-toggle,
+.code-expand-toggle,
+.font-size-btn,
+.brand,
+.table-scroll-wrapper {
+    transition: background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                fill 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                stroke 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -2294,5 +2308,156 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
     color: #f472b6 !important;
     font-weight: 700;
 }
+
+/* ==========================================================================
+   TOP LOADING PROGRESS BAR (YOUTUBE / LINEAR STYLE)
+   ========================================================================== */
+
+#top-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #2563eb, #38bdf8, #818cf8, #a855f7);
+    background-size: 200% 100%;
+    animation: topBarShimmer 1.4s linear infinite;
+    z-index: 999999;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.7), 0 0 4px #2563eb;
+    border-radius: 0 2px 2px 0;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+@keyframes topBarShimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+/* ==========================================================================
+   VIEW TRANSITIONS & ULTRA-SMOOTH SPA MORPHING
+   ========================================================================== */
+
+::view-transition-group(article-body) {
+    animation-duration: 0.32s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(article-body) {
+    animation: 0.2s cubic-bezier(0.16, 1, 0.3, 1) both pageFadeOut;
+}
+
+::view-transition-new(article-body) {
+    animation: 0.3s cubic-bezier(0.16, 1, 0.3, 1) both pageFadeIn;
+}
+
+@keyframes pageFadeOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+    100% { opacity: 0; transform: translateY(-8px) scale(0.995); filter: blur(2px); }
+}
+
+@keyframes pageFadeIn {
+    0% { opacity: 0; transform: translateY(12px) scale(0.995); filter: blur(2px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+}
+
+.article-container {
+    view-transition-name: article-body;
+}
+
+.article-container.page-transition-exit {
+    opacity: 0 !important;
+    transform: translateY(-8px) scale(0.995) !important;
+    filter: blur(2px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.article-container.page-transition-enter {
+    animation: pageReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Smooth typography & font-size transitions */
+.markdown-body {
+    transition: font-size 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                line-height 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Smooth Post Nav Card hover lift & glowing border */
+.post-nav-card {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.post-nav-card:hover {
+    transform: translateY(-4px) scale(1.008) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12), 0 0 0 1px var(--primary) !important;
+}
+
+.post-nav-card.prev:hover .post-nav-label svg {
+    transform: translateX(-4px);
+}
+
+.post-nav-card.next:hover .post-nav-label svg {
+    transform: translateX(4px);
+}
+
+.post-nav-label svg {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* Smooth Callout hover */
+.callout {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.callout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Smooth Code Block hover */
+.markdown-body pre {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.markdown-body pre:hover {
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.07);
+}
+
+.mac-dot {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease !important;
+}
+
+.mac-dot:hover {
+    transform: scale(1.22);
+    filter: brightness(1.15);
+}
+
+/* Smooth Anchor & TOC transitions */
+.heading-anchor {
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                color 0.2s ease !important;
+}
+
+.toc-item {
+    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.toc-item:hover {
+    transform: translateX(3px);
+}
+
 
 

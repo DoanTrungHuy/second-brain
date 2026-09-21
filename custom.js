@@ -134,11 +134,123 @@ document.addEventListener('DOMContentLoaded', () => {
 
     themeBtn.onclick = toggleThemeWithTransition;
 
+    
     // ==========================================================================
-    // 3. RENDER MARKDOWN, SYNTAX HIGHLIGHTING & TERMINAL ACTIONS
+    // 3. GLOBAL ARTICLES REGISTRY & ULTRA-SMOOTH SPA NAVIGATION
     // ==========================================================================
-    const mdBody = document.getElementById('markdown-body');
-    if (mdBody && typeof rawMarkdown !== 'undefined' && typeof marked !== 'undefined') {
+    const articlesList = [
+        { url: "index.html", title: "Cấu trúc Cache, Virtual Memory & Malloc" },
+        { url: "mmu-tlb-page-table.html", title: "Phần cứng MMU, TLB & Page Table" },
+        { url: "mesi-protocol.html", title: "Giao thức Đồng bộ MESI" },
+        { url: "spinlock-vs-mutex.html", title: "Tối ưu Đồng bộ: SpinLock vs Mutex" },
+        { url: "string-vs-string-view.html", title: "Quản lý Bộ nhớ: std::string_view" }
+    ];
+
+    // In-memory cache for ultra-fast instant page switching (0ms latency)
+    const pageCache = new Map();
+
+    // Top Loading Progress Bar (YouTube / Linear style)
+    let topProgressBar = document.getElementById('top-loading-bar');
+    if (!topProgressBar) {
+        topProgressBar = document.createElement('div');
+        topProgressBar.id = 'top-loading-bar';
+        document.body.appendChild(topProgressBar);
+    }
+
+    const startLoadingBar = () => {
+        topProgressBar.style.transition = 'width 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease';
+        topProgressBar.style.opacity = '1';
+        topProgressBar.style.width = '35%';
+        setTimeout(() => {
+            if (topProgressBar.style.opacity === '1') topProgressBar.style.width = '75%';
+        }, 120);
+    };
+
+    const finishLoadingBar = () => {
+        topProgressBar.style.width = '100%';
+        setTimeout(() => {
+            topProgressBar.style.opacity = '0';
+            setTimeout(() => {
+                topProgressBar.style.transition = 'none';
+                topProgressBar.style.width = '0%';
+            }, 250);
+        }, 200);
+    };
+
+    // Dedicated Fullscreen Code Modal Portal (Persistent across navigation)
+    let codeModal = document.getElementById('code-expand-modal');
+    if (!codeModal) {
+        codeModal = document.createElement('div');
+        codeModal.id = 'code-expand-modal';
+        codeModal.innerHTML = `
+            <div class="code-modal-card">
+                <div class="mac-window-header">
+                    <div class="mac-dots">
+                        <div class="mac-dot red code-modal-close" title="Đóng (Esc)"></div>
+                        <div class="mac-dot yellow code-modal-close" title="Thu nhỏ (Esc)"></div>
+                        <div class="mac-dot green" title="Đang ở chế độ toàn màn hình"></div>
+                    </div>
+                    <div class="code-lang-label" id="modal-lang-label">CODE</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button class="code-wrap-toggle" id="modal-wrap-btn" title="Tự động xuống dòng">Wrap</button>
+                        <button class="copy-btn-floating" id="modal-copy-btn">Copy</button>
+                        <button class="code-modal-close-btn" id="modal-close-btn" title="Đóng">✕ Đóng (Esc)</button>
+                    </div>
+                </div>
+                <div class="code-modal-body">
+                    <pre><code id="modal-code-content"></code></pre>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(codeModal);
+    }
+
+    const modalCodeContent = codeModal.querySelector('#modal-code-content');
+    const modalLangLabel = codeModal.querySelector('#modal-lang-label');
+    const modalWrapBtn = codeModal.querySelector('#modal-wrap-btn');
+    const modalCopyBtn = codeModal.querySelector('#modal-copy-btn');
+    const modalCloseBtn = codeModal.querySelector('#modal-close-btn');
+    const modalCard = codeModal.querySelector('.code-modal-card');
+
+    const closeCodeModal = () => {
+        codeModal.classList.remove('show');
+        document.body.classList.remove('code-modal-open');
+    };
+
+    modalCloseBtn.onclick = closeCodeModal;
+    codeModal.querySelectorAll('.code-modal-close').forEach(dot => dot.onclick = closeCodeModal);
+    codeModal.onclick = (e) => {
+        if (e.target === codeModal) closeCodeModal();
+    };
+
+    if (modalWrapBtn) {
+        modalWrapBtn.onclick = (e) => {
+            e.stopPropagation();
+            modalCard.classList.toggle('code-wrapped');
+            modalWrapBtn.classList.toggle('active');
+        };
+    }
+
+    if (modalCopyBtn) {
+        modalCopyBtn.onclick = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(modalCodeContent.innerText);
+            const orig = modalCopyBtn.innerHTML;
+            modalCopyBtn.innerHTML = '<span style="color:#10b981;font-weight:600;">✓ Copied</span>';
+            showToast('✓ Đã sao chép mã nguồn vào bộ nhớ tạm!');
+            setTimeout(() => modalCopyBtn.innerHTML = orig, 1800);
+        };
+    }
+
+    // ==========================================================================
+    // 4. ARTICLE RENDERER & INTERACTIVE ENHANCER
+    // ==========================================================================
+    const renderArticle = (markdownText, targetPath = null) => {
+        const mdBody = document.getElementById('markdown-body');
+        if (!mdBody || !markdownText || typeof marked === 'undefined') return;
+
+        const currentPath = targetPath || window.location.pathname.split('/').pop() || 'index.html';
+
         const renderer = new marked.Renderer();
         const originalCode = renderer.code;
         renderer.code = function(code, language, isEscaped) {
@@ -161,7 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             breaks: true
         });
-        mdBody.innerHTML = marked.parse(rawMarkdown);
+
+        mdBody.innerHTML = marked.parse(markdownText);
 
         // Interactive Click-to-Copy for Inline Code
         mdBody.querySelectorAll('p code, li code').forEach(codeEl => {
@@ -204,73 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
             MathJax.typesetPromise([mdBody]).catch(err => console.error('MathJax error:', err.message));
         }
 
-        // Dedicated Fullscreen Code Modal Portal
-        let codeModal = document.getElementById('code-expand-modal');
-        if (!codeModal) {
-            codeModal = document.createElement('div');
-            codeModal.id = 'code-expand-modal';
-            codeModal.innerHTML = `
-                <div class="code-modal-card">
-                    <div class="mac-window-header">
-                        <div class="mac-dots">
-                            <div class="mac-dot red code-modal-close" title="Đóng (Esc)"></div>
-                            <div class="mac-dot yellow code-modal-close" title="Thu nhỏ (Esc)"></div>
-                            <div class="mac-dot green" title="Đang ở chế độ toàn màn hình"></div>
-                        </div>
-                        <div class="code-lang-label" id="modal-lang-label">CODE</div>
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <button class="code-wrap-toggle" id="modal-wrap-btn" title="Tự động xuống dòng">Wrap</button>
-                            <button class="copy-btn-floating" id="modal-copy-btn">Copy</button>
-                            <button class="code-modal-close-btn" id="modal-close-btn" title="Đóng">✕ Đóng (Esc)</button>
-                        </div>
-                    </div>
-                    <div class="code-modal-body">
-                        <pre><code id="modal-code-content"></code></pre>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(codeModal);
-        }
-
-        const modalCodeContent = codeModal.querySelector('#modal-code-content');
-        const modalLangLabel = codeModal.querySelector('#modal-lang-label');
-        const modalWrapBtn = codeModal.querySelector('#modal-wrap-btn');
-        const modalCopyBtn = codeModal.querySelector('#modal-copy-btn');
-        const modalCloseBtn = codeModal.querySelector('#modal-close-btn');
-        const modalCard = codeModal.querySelector('.code-modal-card');
-
-        const closeCodeModal = () => {
-            codeModal.classList.remove('show');
-            document.body.classList.remove('code-modal-open');
-        };
-
-        modalCloseBtn.onclick = closeCodeModal;
-        codeModal.querySelectorAll('.code-modal-close').forEach(dot => dot.onclick = closeCodeModal);
-        codeModal.onclick = (e) => {
-            if (e.target === codeModal) closeCodeModal();
-        };
-
-        if (modalWrapBtn) {
-            modalWrapBtn.onclick = (e) => {
-                e.stopPropagation();
-                modalCard.classList.toggle('code-wrapped');
-                modalWrapBtn.classList.toggle('active');
-            };
-        }
-
-        if (modalCopyBtn) {
-            modalCopyBtn.onclick = (e) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(modalCodeContent.innerText);
-                const orig = modalCopyBtn.innerHTML;
-                modalCopyBtn.innerHTML = '<span style="color:#10b981;font-weight:600;">✓ Copied</span>';
-                showToast('✓ Đã sao chép mã nguồn vào bộ nhớ tạm!');
-                setTimeout(() => modalCopyBtn.innerHTML = orig, 1800);
-            };
-        }
-
         // Code Block Actions (Copy, Word Wrap & Fullscreen Expand)
-        document.querySelectorAll('.markdown-body pre').forEach(pre => {
+        mdBody.querySelectorAll('pre').forEach(pre => {
             const copyBtn = pre.querySelector('.copy-btn-floating');
             const wrapBtn = pre.querySelector('.code-wrap-toggle');
             const expandBtn = pre.querySelector('.code-expand-toggle');
@@ -349,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 const icons = {
                     note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
-                    tip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path><circle cx="12" cy="12" r="4"></circle></svg>',
+                    tip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path><circle cx="12" cy="4"></circle></svg>',
                     warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
                     important: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
                     caution: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
@@ -358,102 +406,74 @@ document.addEventListener('DOMContentLoaded', () => {
                 callout.className = `callout callout-${type}`;
                 callout.innerHTML = `
                     <div class="callout-title">${icons[type] || icons.note} <span>${titles[type] || type.toUpperCase()}</span></div>
-                    <p>${rest}
+                    <div class="callout-content"><p>${rest}</div>
                 `;
-                bq.replaceWith(callout);
+                bq.parentNode.replaceChild(callout, bq);
             }
         });
 
-        // Article Meta Bar (Reading time, words, share, print, zen)
-        const mainH1 = mdBody.querySelector('h1');
-        if (mainH1) {
-            const rawText = mdBody.innerText || '';
-            const words = rawText.trim().split(/\s+/).filter(Boolean).length;
-            const readingTime = Math.max(1, Math.ceil(words / 220));
+        // Mouse-Tracking Spotlight Radial Glow
+        const applySpotlight = (el) => {
+            el.classList.add('spotlight-glow-card');
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                el.style.setProperty('--spotlight-x', `${x}px`);
+                el.style.setProperty('--spotlight-y', `${y}px`);
+            });
+        };
+        mdBody.querySelectorAll('pre, .callout, table').forEach(applySpotlight);
 
-            const metaBar = document.createElement('div');
+        // Reading Time Pill & Share Button
+        const articleText = mdBody.innerText || '';
+        const words = articleText.trim().split(/\s+/).filter(w => w.length > 0).length;
+        const readingMinutes = Math.max(1, Math.ceil(words / 220));
+
+        let metaBar = mdBody.querySelector('.article-meta-bar');
+        if (!metaBar) {
+            metaBar = document.createElement('div');
             metaBar.className = 'article-meta-bar';
-            metaBar.innerHTML = `
-                <div class="meta-badge" title="Thời gian đọc dự kiến">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <span>~${readingTime} phút đọc</span>
-                </div>
-                <div class="meta-divider"></div>
-                <div class="meta-badge" title="Độ dài bài viết">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    <span>${words.toLocaleString()} từ</span>
-                </div>
-                <div class="meta-actions">
-                    <button class="meta-btn" id="btn-share-article" title="Sao chép liên kết chia sẻ">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                        <span>Chia sẻ</span>
-                    </button>
-                    <button class="meta-btn" id="btn-print-article" title="In hoặc lưu PDF">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                        <span>In / PDF</span>
-                    </button>
-                    <button class="meta-btn" id="btn-zen-mode" title="Chế độ đọc tập trung (Phím: Z)">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
-                        <span>Zen Mode</span>
-                    </button>
-                </div>
-            `;
-            mainH1.insertAdjacentElement('afterend', metaBar);
+            const firstH1 = mdBody.querySelector('h1');
+            if (firstH1 && firstH1.nextSibling) {
+                firstH1.parentNode.insertBefore(metaBar, firstH1.nextSibling);
+            } else {
+                mdBody.prepend(metaBar);
+            }
+        }
+        metaBar.innerHTML = `
+            <div class="reading-time-pill" title="Ước tính thời gian đọc dựa trên ${words.toLocaleString()} từ">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Khoảng <strong>${readingMinutes} phút đọc</strong> (${words.toLocaleString()} từ)</span>
+            </div>
+            <button class="share-article-btn" title="Sao chép liên kết bài viết">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                Chia sẻ
+            </button>
+        `;
 
-            metaBar.querySelector('#btn-share-article')?.addEventListener('click', () => {
+        const shareBtn = metaBar.querySelector('.share-article-btn');
+        if (shareBtn) {
+            shareBtn.onclick = () => {
                 navigator.clipboard.writeText(window.location.href);
-                showToast('✓ Đã sao chép liên kết bài viết vào clipboard!');
-            });
-
-            metaBar.querySelector('#btn-print-article')?.addEventListener('click', () => {
-                window.print();
-            });
-
-            metaBar.querySelector('#btn-zen-mode')?.addEventListener('click', () => {
-                document.body.classList.toggle('focus-mode');
-                if (document.body.classList.contains('focus-mode')) {
-                    showToast('Chế độ tập trung (Zen Mode) đã kích hoạt! Nhấn Z để thoát.');
-                } else {
-                    showToast('Đã thoát chế độ tập trung.');
-                }
-            });
+                showToast('✓ Đã sao chép liên kết bài viết!');
+            };
         }
 
-        // Image Lightbox Modal
-        const lightbox = document.createElement('div');
-        lightbox.id = 'image-lightbox';
-        lightbox.innerHTML = '<img src="" alt="Phóng to hình ảnh">';
-        document.body.appendChild(lightbox);
-        const lightboxImg = lightbox.querySelector('img');
-
-        mdBody.querySelectorAll('img').forEach(img => {
-            img.title = img.title || 'Nhấn để phóng to hình ảnh';
-            img.addEventListener('click', (e) => {
-                e.stopPropagation();
-                lightboxImg.src = img.src;
-                lightboxImg.alt = img.alt || 'Hình ảnh';
-                lightbox.classList.add('show');
-            });
-        });
-
-        lightbox.addEventListener('click', () => {
-            lightbox.classList.remove('show');
-        });
-
-        // ======================================================================
-        // 4. TABLE OF CONTENTS IN RIGHT SIDEBAR & DYNAMIC GLIDER
-        // ======================================================================
+        // Heading Anchor Links & Pulse Highlight
         const triggerTargetPulse = (targetEl) => {
             if (!targetEl) return;
             targetEl.classList.remove('heading-target-pulse');
-            void targetEl.offsetWidth; // Force reflow
+            void targetEl.offsetWidth;
             targetEl.classList.add('heading-target-pulse');
             setTimeout(() => targetEl.classList.remove('heading-target-pulse'), 1900);
         };
 
         const headings = mdBody.querySelectorAll('h2, h3');
-        let tocProgressPill = null;
-        let tocGlider = null;
+        
+        // Clean up previous right sidebar
+        const existingRightSidebar = document.getElementById('right-sidebar');
+        if (existingRightSidebar) existingRightSidebar.remove();
 
         if (headings.length > 0) {
             const rightSidebar = document.createElement('div');
@@ -469,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tocTitle.className = 'toc-title';
             tocTitle.innerText = 'MỤC LỤC';
 
-            tocProgressPill = document.createElement('span');
+            const tocProgressPill = document.createElement('span');
             tocProgressPill.className = 'toc-progress-pill';
             tocProgressPill.innerText = '0%';
 
@@ -477,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tocTitleWrapper.appendChild(tocProgressPill);
             tocContainer.appendChild(tocTitleWrapper);
 
-            tocGlider = document.createElement('div');
+            const tocGlider = document.createElement('div');
             tocGlider.className = 'toc-glider';
             tocContainer.appendChild(tocGlider);
 
@@ -519,34 +539,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 anchor.onclick = (e) => {
                     e.preventDefault();
+                    history.pushState(null, null, '#' + h.id);
                     navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#' + h.id);
-                    const orig = anchor.innerHTML;
-                    anchor.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-                    setTimeout(() => anchor.innerHTML = orig, 1500);
-                    window.history.pushState(null, null, '#' + h.id);
                     h.scrollIntoView({ behavior: 'smooth' });
                     triggerTargetPulse(h);
+                    showToast(`✓ Đã chép link mục: <strong>${h.innerText.replace(/^#+\s*/, '').trim()}</strong>`);
                 };
-                
-                h.insertBefore(anchor, h.firstChild);
+
+                h.appendChild(anchor);
             });
 
-            // ScrollSpy for Active TOC Item & Glider
-            const tocItems = document.querySelectorAll('.toc-item');
+            // ScrollSpy for TOC & Reading Progress
+            const tocItems = tocContainer.querySelectorAll('.toc-item');
             const scrollSpy = () => {
-                let currentId = null;
-                let minDistance = Infinity;
+                const scrollPos = window.scrollY || document.documentElement.scrollTop;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const rawPercent = docHeight > 0 ? Math.min(100, Math.max(0, Math.round((scrollPos / docHeight) * 100))) : 0;
                 
-                headings.forEach(h => {
-                    const rect = h.getBoundingClientRect();
-                    if (rect.top >= -60 && rect.top < window.innerHeight / 2.5) {
-                        if (rect.top < minDistance) {
-                            minDistance = rect.top;
-                            currentId = h.id;
-                        }
+                if (tocProgressPill) {
+                    tocProgressPill.innerText = `${rawPercent}%`;
+                }
+
+                let currentId = '';
+                for (let i = 0; i < headings.length; i++) {
+                    const rect = headings[i].getBoundingClientRect();
+                    if (rect.top <= 140) {
+                        currentId = headings[i].id;
+                    } else {
+                        break;
                     }
-                });
-                
+                }
+
                 if (!currentId) {
                     for (let i = headings.length - 1; i >= 0; i--) {
                         if (headings[i].getBoundingClientRect().top < 0) {
@@ -581,40 +604,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
             
+            if (window._articleScrollSpy) window.removeEventListener('scroll', window._articleScrollSpy);
+            window._articleScrollSpy = scrollSpy;
             window.addEventListener('scroll', scrollSpy, { passive: true });
-            setTimeout(scrollSpy, 300);
+            setTimeout(scrollSpy, 250);
         }
 
-        // Support direct anchor jump with pulse highlight
-        const handleHashNav = () => {
-            if (window.location.hash) {
-                const id = decodeURIComponent(window.location.hash.substring(1));
-                const target = document.getElementById(id);
-                if (target) {
-                    setTimeout(() => {
-                        target.scrollIntoView({ behavior: 'smooth' });
-                        triggerTargetPulse(target);
-                    }, 350);
-                }
-            }
-        };
-        window.addEventListener('hashchange', handleHashNav);
-        setTimeout(handleHashNav, 250);
+        // Sticky Floating Topbar & Font Size Controls
+        const existingTopbar = document.querySelector('.sticky-topbar');
+        if (existingTopbar) existingTopbar.remove();
 
-        // ======================================================================
-        // STICKY GLASS FLOATING TOPBAR & FONT SIZE CONTROLS
-        // ======================================================================
-        const savedFontSize = localStorage.getItem('doc-font-size') || 'md';
-        const setFontSize = (size) => {
-            document.body.setAttribute('data-font-size', size);
-            localStorage.setItem('doc-font-size', size);
-            document.querySelectorAll('.font-size-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-size') === size);
-            });
-        };
-        setFontSize(savedFontSize);
-
-        const activeNav = document.querySelector('.nav-item.active');
+        const activeNav = document.querySelector(`.nav-item[href="${currentPath}"]`);
         let categoryName = 'Tài liệu';
         if (activeNav) {
             let prev = activeNav.previousElementSibling;
@@ -638,53 +638,46 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="sticky-actions">
                 <div class="font-size-group" title="Chỉnh cỡ chữ đọc bài (A- / A / A+)">
-                    <button class="font-size-btn ${savedFontSize === 'sm' ? 'active' : ''}" data-size="sm">A-</button>
-                    <button class="font-size-btn ${savedFontSize === 'md' ? 'active' : ''}" data-size="md">A</button>
-                    <button class="font-size-btn ${savedFontSize === 'lg' ? 'active' : ''}" data-size="lg">A+</button>
+                    <button class="font-size-btn" data-size="sm">A-</button>
+                    <button class="font-size-btn" data-size="md">A</button>
+                    <button class="font-size-btn" data-size="lg">A+</button>
                 </div>
-                <button class="sticky-btn" id="sticky-zen-btn" title="Chế độ tập trung (Phím: Z)">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
-                    <span>Zen</span>
-                </button>
-                <button class="sticky-btn" id="sticky-top-btn" title="Lên đầu trang">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                    <span>Đầu trang</span>
-                </button>
             </div>
         `;
         document.body.appendChild(stickyTopbar);
 
+        const savedFontSize = localStorage.getItem('doc-font-size') || 'md';
+        const setFontSize = (size) => {
+            document.body.setAttribute('data-font-size', size);
+            localStorage.setItem('doc-font-size', size);
+            stickyTopbar.querySelectorAll('.font-size-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-size') === size);
+            });
+        };
+        setFontSize(savedFontSize);
+
         stickyTopbar.querySelectorAll('.font-size-btn').forEach(btn => {
-            btn.addEventListener('click', () => setFontSize(btn.getAttribute('data-size')));
+            btn.onclick = () => setFontSize(btn.getAttribute('data-size'));
         });
 
-        stickyTopbar.querySelector('#sticky-zen-btn')?.addEventListener('click', () => {
-            document.body.classList.toggle('focus-mode');
-            if (document.body.classList.contains('focus-mode')) {
-                showToast('Chế độ tập trung (Zen Mode) đã kích hoạt! Nhấn Z để thoát.');
+        const updateTopbarVisibility = () => {
+            const scrollPos = window.scrollY || document.documentElement.scrollTop;
+            if (scrollPos > 180) {
+                stickyTopbar.classList.add('visible');
             } else {
-                showToast('Đã thoát chế độ tập trung.');
+                stickyTopbar.classList.remove('visible');
             }
-        });
+        };
+        if (window._topbarScrollSpy) window.removeEventListener('scroll', window._topbarScrollSpy);
+        window._topbarScrollSpy = updateTopbarVisibility;
+        window.addEventListener('scroll', updateTopbarVisibility, { passive: true });
+        updateTopbarVisibility();
 
-        stickyTopbar.querySelector('#sticky-top-btn')?.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        // Post Navigation (Previous / Next Article Cards)
+        const existingPostNav = document.querySelector('.post-navigation');
+        if (existingPostNav) existingPostNav.remove();
 
-        // ======================================================================
-        // 5. NEXT / PREVIOUS ARTICLE BOTTOM NAVIGATION
-        // ======================================================================
-        const articlesList = [
-            { url: "index.html", title: "Kiến trúc Cache & Virtual Memory" },
-            { url: "mmu-tlb-page-table.html", title: "Cơ chế MMU, TLB & Page Table" },
-            { url: "mesi-protocol.html", title: "Giao thức Đồng bộ MESI" },
-            { url: "spinlock-vs-mutex.html", title: "Tối ưu Đồng bộ: SpinLock vs Mutex" },
-            { url: "string-vs-string-view.html", title: "Quản lý Bộ nhớ: std::string_view" }
-        ];
-
-        const currentPath = window.location.pathname.split('/').pop() || 'index.html';
         const currentIndex = articlesList.findIndex(a => a.url === currentPath);
-
         if (currentIndex !== -1) {
             const navContainer = document.createElement('div');
             navContainer.className = 'post-navigation';
@@ -703,6 +696,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="post-nav-title">${prevArticle.title}</div>
                 `;
+                prevCard.onclick = (e) => {
+                    e.preventDefault();
+                    navigateSmoothly(prevArticle.url);
+                };
                 navContainer.appendChild(prevCard);
             } else {
                 const spacer = document.createElement('div');
@@ -721,6 +718,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="post-nav-title">${nextArticle.title}</div>
                 `;
+                nextCard.onclick = (e) => {
+                    e.preventDefault();
+                    navigateSmoothly(nextArticle.url);
+                };
                 navContainer.appendChild(nextCard);
             }
 
@@ -729,7 +730,143 @@ document.addEventListener('DOMContentLoaded', () => {
                 articleContainer.appendChild(navContainer);
             }
         }
+
+        // Intercept internal article links in markdown body
+        mdBody.querySelectorAll('a').forEach(a => {
+            const href = a.getAttribute('href');
+            if (href && !href.startsWith('http') && !href.startsWith('#') && href.endsWith('.html')) {
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    navigateSmoothly(href);
+                };
+            }
+        });
+    };
+
+    // ==========================================================================
+    // 5. SEAMLESS SPA NAVIGATION ENGINE WITH VIEW TRANSITIONS
+    // ==========================================================================
+    const updateActiveSidebar = (cleanUrl) => {
+        document.querySelectorAll('#sidebar .nav-item').forEach(item => {
+            const href = item.getAttribute('href');
+            const isActive = href === cleanUrl;
+            item.classList.toggle('active', isActive);
+        });
+    };
+
+    const navigateSmoothly = async (url, push = true) => {
+        if (!url) return;
+        const cleanUrl = url.split('#')[0];
+        const hash = url.includes('#') ? url.split('#')[1] : null;
+        const currentClean = window.location.pathname.split('/').pop() || 'index.html';
+
+        if (cleanUrl === currentClean || cleanUrl === '') {
+            if (hash) {
+                const el = document.getElementById(hash);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                    const targetPulse = mdBody?.querySelector('#' + hash);
+                    if (targetPulse) {
+                        targetPulse.classList.remove('heading-target-pulse');
+                        void targetPulse.offsetWidth;
+                        targetPulse.classList.add('heading-target-pulse');
+                        setTimeout(() => targetPulse.classList.remove('heading-target-pulse'), 1900);
+                    }
+                }
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            return;
+        }
+
+        startLoadingBar();
+
+        try {
+            let html = pageCache.get(cleanUrl);
+            if (!html) {
+                const resp = await fetch(cleanUrl);
+                if (!resp.ok) throw new Error('Failed to load page');
+                html = await resp.text();
+                pageCache.set(cleanUrl, html);
+            }
+
+            const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
+            const newTitle = titleMatch ? titleMatch[1] : document.title;
+
+            const mdMatch = html.match(/const rawMarkdown = `([\s\S]*?)`;/);
+            const newRawMarkdown = mdMatch ? mdMatch[1] : '';
+
+            const articleContainer = document.querySelector('.article-container');
+
+            const applyPageUpdate = () => {
+                document.title = newTitle;
+                window.rawMarkdown = newRawMarkdown;
+                renderArticle(newRawMarkdown, cleanUrl);
+                updateActiveSidebar(cleanUrl);
+
+                if (hash) {
+                    setTimeout(() => {
+                        const el = document.getElementById(hash);
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 120);
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            };
+
+            if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const transition = document.startViewTransition(() => {
+                    applyPageUpdate();
+                });
+                await transition.finished;
+            } else {
+                if (articleContainer) articleContainer.classList.add('page-transition-exit');
+                await new Promise(r => setTimeout(r, 180));
+                applyPageUpdate();
+                if (articleContainer) {
+                    articleContainer.classList.remove('page-transition-exit');
+                    articleContainer.classList.add('page-transition-enter');
+                    setTimeout(() => articleContainer.classList.remove('page-transition-enter'), 350);
+                }
+            }
+
+            if (push) {
+                window.history.pushState({ path: cleanUrl }, '', url);
+            }
+
+            finishLoadingBar();
+        } catch (err) {
+            console.error('SPA navigation error, falling back:', err);
+            finishLoadingBar();
+            window.location.href = url;
+        }
+    };
+
+    // Initial render of article content
+    if (typeof rawMarkdown !== 'undefined') {
+        renderArticle(rawMarkdown);
     }
+
+    // Intercept sidebar links for seamless transition
+    document.querySelectorAll('#sidebar .nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const href = item.getAttribute('href');
+            if (href && !href.startsWith('http') && !href.startsWith('#')) {
+                e.preventDefault();
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) sidebar.classList.remove('open');
+                document.body.classList.remove('sidebar-open');
+                navigateSmoothly(href);
+            }
+        });
+    });
+
+    // Browser Back / Forward History Navigation
+    window.addEventListener('popstate', () => {
+        const path = window.location.pathname.split('/').pop() || 'index.html';
+        navigateSmoothly(path, false);
+    });
+
 
     // ==========================================================================
     // 6. READING PROGRESS BAR & CIRCULAR BACK TO TOP
@@ -1098,7 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (e.key === 'Enter') {
                 if (items.length > 0 && items[selectedIndex]) {
                     e.preventDefault();
-                    window.location.href = items[selectedIndex].getAttribute('href');
+                    closeSpotlight(); navigateSmoothly(items[selectedIndex].getAttribute('href'));
                 }
             }
             return;
