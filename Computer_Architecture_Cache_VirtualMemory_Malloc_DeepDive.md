@@ -31,8 +31,8 @@ Khi CPU cần truy xuất bộ nhớ tại một địa chỉ vật lý, phần 
 ### 2.1 Ví dụ bài toán cụ thể
 Giả sử có mảng `int arr[32]` nằm tại Địa chỉ Vật lý `0x00401200`.
 Mảng này gồm 128 Bytes, được chia thành 2 Khối 64B:
-*   **Khối 1:** `arr[0]` đến `arr[15]` (Địa chỉ `0x00401200` $\rightarrow$ `0x0040123F`).
-*   **Khối 2:** `arr[16]` đến `arr[31]` (Địa chỉ `0x00401240` $\rightarrow$ `0x0040127F`).
+*   **Khối 1:** `arr[0]` đến `arr[15]` (Địa chỉ `0x00401200` → `0x0040123F`).
+*   **Khối 2:** `arr[16]` đến `arr[31]` (Địa chỉ `0x00401240` → `0x0040127F`).
 
 Giả sử qua phép tính phân rã bit địa chỉ:
 *   `0x00401200` có Index = 8, Tag = `0x00401`.
@@ -42,8 +42,8 @@ Giả sử qua phép tính phân rã bit địa chỉ:
 
 | Cache Line | Index | Valid Bit | Tag Store | Khối dữ liệu Data Block (64 Bytes) | Địa chỉ bộ nhớ nạp tương ứng |
 | :--- | :---: | :---: | :---: | :--- | :--- |
-| **Cache Line số 8** | `8` | `1` | `0x00401` | `arr[0]`, `arr[1]`, `arr[2]`, ..., `arr[15]` | `0x00401200` $\rightarrow$ `0x0040123F` |
-| **Cache Line số 9** | `9` | `1` | `0x00401` | `arr[16]`, `arr[17]`, `arr[18]`, ..., `arr[31]` | `0x00401240` $\rightarrow$ `0x0040127F` |
+| **Cache Line số 8** | `8` | `1` | `0x00401` | `arr[0]`, `arr[1]`, `arr[2]`, ..., `arr[15]` | `0x00401200` → `0x0040123F` |
+| **Cache Line số 9** | `9` | `1` | `0x00401` | `arr[16]`, `arr[17]`, `arr[18]`, ..., `arr[31]` | `0x00401240` → `0x0040127F` |
 
 #### Chi tiết cấu trúc từng Cache Line:
 
@@ -70,9 +70,9 @@ Giả sử qua phép tính phân rã bit địa chỉ:
     *   Index = `8`
     *   Offset = `20` (Byte thứ 20 trong khối).
 3.  **Định Vị Ô Tủ:** CPU dùng Index = 8 nhảy thẳng đến **Cache Line số 8**.
-4.  **Kiểm Tra Tag Store:** CPU đọc `Tag Store` của Cache Line số 8 thấy `0x00401`, so sánh với Tag cần tìm là `0x00401` $\rightarrow$ **TRÙNG KHỚP! (Cache Hit)**.
+4.  **Kiểm Tra Tag Store:** CPU đọc `Tag Store` của Cache Line số 8 thấy `0x00401`, so sánh với Tag cần tìm là `0x00401` → **TRÙNG KHỚP! (Cache Hit)**.
 5.  **Rút Dữ Liệu:** CPU dùng Offset = 20, trỏ thẳng vào Byte thứ 20 trong Data Block (chính là vị trí bắt đầu của `arr[5]`), lấy ra 4 bytes và nạp vào thanh ghi CPU.
-    *   **Thời gian xử lý:** $\sim 1$ nanosecond ($1 \rightarrow 2$ chu kỳ CPU).
+    *   **Thời gian xử lý:** $\sim 1$ nanosecond (1 → 2 chu kỳ CPU).
 
 ---
 

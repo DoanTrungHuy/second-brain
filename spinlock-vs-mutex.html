@@ -109,7 +109,7 @@
         }
     </style>
 
-<link rel="stylesheet" href="custom.css?v=45">
+<link rel="stylesheet" href="custom.css?v=46">
 </head>
 <body>
     <div class="mobile-header">
@@ -236,7 +236,7 @@ public:
 };
 \`\`\`
 *   \`std::atomic_flag\`: Kiểu dữ liệu duy nhất trong C++ được chuẩn hóa đảm bảo 100% Lock-Free trên mọi phần cứng.
-*   \`test_and_set()\`: Hàm thực hiện nguyên tử (Atomic) 2 việc cùng lúc: Đóng cờ (Set = \`true\`) và trả về trạng thái cũ. Nếu trả về \`false\` (chưa ai khóa) $\\\\rightarrow$ lấy được khóa. Nếu trả về \`true\` (đã khóa) $\\\\rightarrow$ tiếp tục Spin trong vòng lặp \`while\`.
+*   \`test_and_set()\`: Hàm thực hiện nguyên tử (Atomic) 2 việc cùng lúc: Đóng cờ (Set = \`true\`) và trả về trạng thái cũ. Nếu trả về \`false\` (chưa ai khóa) → lấy được khóa. Nếu trả về \`true\` (đã khóa) → tiếp tục Spin trong vòng lặp \`while\`.
 
 ---
 
@@ -244,12 +244,12 @@ public:
 Trình biên dịch và CPU luôn có xu hướng đảo lộn thứ tự các lệnh để chạy cho nhanh. Nếu không có rào cản (Memory Barriers), CPU có thể mang đoạn code xử lý dữ liệu ra khỏi phạm vi khóa, gây nát dữ liệu.
 *   **\`memory_order_acquire\` (Rào cản đi XUỐNG):** Đặt ở hàm \`lock()\`. Cấm tuyệt đối CPU không được kéo bất kỳ dòng code nào ở BÊN DƯỚI khóa vượt lên chạy trước khi thực sự lấy được khóa.
 *   **\`memory_order_release\` (Rào cản đi LÊN):** Đặt ở hàm \`unlock()\`. Cấm CPU không được trượt bất kỳ lệnh nào từ BÊN TRÊN xuống chạy sau khi đã mở khóa. Đồng thời bắt CPU đồng bộ hóa toàn bộ dữ liệu vừa sửa xuống RAM.
-$\\\\rightarrow$ Hai rào cản này nhốt chặt đoạn dữ liệu quan trọng ở giữa, tạo thành vùng an toàn (Critical Section) tuyệt đối.
+→ Hai rào cản này nhốt chặt đoạn dữ liệu quan trọng ở giữa, tạo thành vùng an toàn (Critical Section) tuyệt đối.
 
 ---
 
 ## 5. Chu kỳ CPU (CPU Cycle)
-*   Chu kỳ là "nhịp đập" của CPU. 1 CPU 3GHz đập 3 tỷ nhịp mỗi giây (1 cycle $\\\\approx$ 0.3 ns).
+*   Chu kỳ là "nhịp đập" của CPU. 1 CPU 3GHz đập 3 tỷ nhịp mỗi giây (1 cycle ≈ 0.3 ns).
 *   Đọc dữ liệu từ L1 Cache tốn 1-3 chu kỳ. Đọc từ RAM tốn 200-300 chu kỳ. 
 *   Đó là lý do dự án sử dụng \`Zero-Allocation\` (không dùng \`new/malloc\`) và \`Slab Allocator\` để ép dữ liệu nằm vừa vặn trong Cache, tránh tốn chu kỳ lãng phí vào việc chờ RAM.
 
@@ -325,6 +325,6 @@ Lệnh \`pause\` (dịch ra hợp ngữ là \`PAUSE\` trên x86) chính là tín
             });
         });
     </script>
-<script src="custom.js?v=45"></script>
+<script src="custom.js?v=46"></script>
 </body>
 </html>
