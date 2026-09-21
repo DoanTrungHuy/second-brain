@@ -435,20 +435,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         metaBar.innerHTML = `
             <div class="reading-time-pill" title="Ước tính thời gian đọc dựa trên ${words.toLocaleString()} từ">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>Khoảng <strong>${readingMinutes} phút đọc</strong> (${words.toLocaleString()} từ)</span>
             </div>
-            <button class="share-article-btn" title="Sao chép liên kết bài viết">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                Chia sẻ
-            </button>
+            <div class="meta-actions">
+                <button class="share-article-btn meta-btn" title="Sao chép liên kết bài viết">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <span>Chia sẻ</span>
+                </button>
+            </div>
         `;
 
         const shareBtn = metaBar.querySelector('.share-article-btn');
         if (shareBtn) {
             shareBtn.onclick = () => {
                 navigator.clipboard.writeText(window.location.href);
+                shareBtn.classList.add('copied');
+                shareBtn.innerHTML = `
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Đã chép link!</span>
+                `;
                 showToast('✓ Đã sao chép liên kết bài viết!');
+                setTimeout(() => {
+                    shareBtn.classList.remove('copied');
+                    shareBtn.innerHTML = `
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        <span>Chia sẻ</span>
+                    `;
+                }, 2000);
             };
         }
 
