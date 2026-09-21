@@ -810,8 +810,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
             const newTitle = titleMatch ? titleMatch[1] : document.title;
 
-            const mdMatch = html.match(/const rawMarkdown = `([\s\S]*?)`;/);
-            const newRawMarkdown = mdMatch ? mdMatch[1] : '';
+            const startMarker = 'const rawMarkdown = `';
+            const mdStart = html.indexOf(startMarker);
+            let newRawMarkdown = '';
+            if (mdStart !== -1) {
+                const contentStart = mdStart + startMarker.length;
+                const rendererIdx = html.indexOf('const renderer = new marked.Renderer()', contentStart);
+                const mdEnd = rendererIdx !== -1 ? html.lastIndexOf('`;', rendererIdx) : html.lastIndexOf('`;');
+                if (mdEnd !== -1 && mdEnd > contentStart) {
+                    newRawMarkdown = html.slice(contentStart, mdEnd);
+                } else {
+                    const mdMatch = html.match(/const rawMarkdown = `([\s\S]*?)`;/);
+                    newRawMarkdown = mdMatch ? mdMatch[1] : '';
+                }
+            }
+            if (newRawMarkdown) {
+                newRawMarkdown = newRawMarkdown.replace(/\\`/g, '`');
+            }
 
             const articleContainer = document.querySelector('.article-container');
 
