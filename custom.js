@@ -858,14 +858,14 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.documentElement.classList.add('theme-switching');
+                document.documentElement.classList.add('theme-switching', 'spa-navigating');
                 const transition = document.startViewTransition(() => {
                     applyPageUpdate();
                 });
                 transition.finished.then(() => {
-                    document.documentElement.classList.remove('theme-switching');
+                    document.documentElement.classList.remove('theme-switching', 'spa-navigating');
                 }).catch(() => {
-                    document.documentElement.classList.remove('theme-switching');
+                    document.documentElement.classList.remove('theme-switching', 'spa-navigating');
                 });
                 await transition.finished;
             } else {
