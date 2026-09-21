@@ -115,6 +115,8 @@ svg,
 }
 
 body {
+    display: flex;
+    flex-direction: row;
     background-color: var(--bg-body);
     background-image: radial-gradient(var(--dot-color) 1.25px, transparent 1.25px);
     background-size: 24px 24px;
@@ -177,11 +179,20 @@ body {
 #sidebar {
     width: 280px;
     height: 100vh;
-    background: var(--bg-card);
+    background: var(--bg-sidebar);
     border-right: 1px solid var(--border);
     padding: 20px 16px;
     overflow-y: auto;
     flex-shrink: 0;
+    order: 1;
+    box-sizing: border-box;
+}
+
+#main-content {
+    flex: 1 1 0%;
+    min-width: 0;
+    order: 2;
+    box-sizing: border-box;
 }
 
 #sidebar .brand {
@@ -704,6 +715,10 @@ body {
     border-left: 1px solid var(--border);
     overflow-y: auto;
     align-self: flex-start;
+    background: var(--bg-sidebar);
+    order: 3;
+    box-sizing: border-box;
+    margin-left: auto;
 }
 
 #toc-container {
@@ -892,6 +907,10 @@ body.focus-mode #main-content {
     body {
         flex-direction: column !important;
         overflow-x: hidden !important;
+    }
+
+    #right-sidebar {
+        display: none !important;
     }
 
     .mobile-header {

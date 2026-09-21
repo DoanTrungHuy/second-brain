@@ -53,7 +53,7 @@
         .mobile-header { display: none; }
     </style>
 
-    <link rel="stylesheet" href="custom.css?v=49">
+    <link rel="stylesheet" href="custom.css?v=50">
 </head>
 <body>
     <div class="mobile-header">
@@ -133,12 +133,7 @@
                     }
                     
                     if (targetEl) {
-                        const container = document.getElementById('main-content');
-                        const topPos = targetEl.offsetTop - 30;
-                        container.scrollTo({
-                            top: topPos,
-                            behavior: 'smooth'
-                        });
+                        targetEl.scrollIntoView({ behavior: 'smooth' });
                     }
                 }
             }
@@ -269,6 +264,6 @@ Lệnh \`pause\` (dịch ra hợp ngữ là \`PAUSE\` trên x86) chính là tín
             });
         });
     </script>
-<script src="custom.js?v=49"></script>
+<script src="custom.js?v=50"></script>
 </body>
 </html>
