@@ -2441,5 +2441,420 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
     transform: translateX(3px);
 }
 
+/* ==========================================================================
+   MODERN VISUAL DIAGRAM CARDS & MEMORY ARCHITECTURE COMPONENTS
+   ========================================================================== */
+
+.visual-diagram-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 2em 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.visual-diagram-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.08);
+}
+
+.diagram-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+    flex-wrap: wrap;
+}
+
+.diagram-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.diagram-badge {
+    font-size: 0.725rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+}
+
+.badge-blue { background: rgba(37, 99, 235, 0.12); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.25); }
+.badge-green { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
+.badge-purple { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.25); }
+.badge-rose { background: rgba(244, 63, 94, 0.12); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.25); }
+.badge-amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); }
+
+[data-theme="dark"] .badge-blue { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); }
+[data-theme="dark"] .badge-green { color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
+[data-theme="dark"] .badge-purple { color: #c084fc; border-color: rgba(192, 132, 252, 0.3); }
+[data-theme="dark"] .badge-rose { color: #fb7185; border-color: rgba(251, 113, 133, 0.3); }
+[data-theme="dark"] .badge-amber { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); }
+
+/* --- MEMORY MAPPING (Virtual Page to Physical Frame) --- */
+.memory-mapping-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.memory-tier {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tier-title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.tier-blocks-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.tier-blocks-row.scatter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.tier-blocks-row.scatter .mem-block {
+    flex: 1;
+}
+
+.mem-scatter-gap {
+    padding: 0 12px;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: #f43f5e;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    opacity: 0.85;
+}
+
+.mem-block {
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-body);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mem-block.v-page {
+    border-color: rgba(37, 99, 235, 0.3);
+    background: rgba(37, 99, 235, 0.03);
+}
+
+.mem-block.p-frame {
+    border-color: rgba(244, 63, 94, 0.3);
+    background: rgba(244, 63, 94, 0.03);
+}
+
+.mem-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.block-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    font-family: var(--font-mono);
+}
+
+.block-detail {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+}
+
+.mapping-flow-divider {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.mapping-arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--primary);
+    font-size: 0.725rem;
+    font-weight: 600;
+}
+
+.mapping-arrow-col svg {
+    animation: bounceDown 1.8s infinite ease-in-out;
+}
+
+@keyframes bounceDown {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+}
+
+/* --- MALLOC ARCHITECTURE 3-TIER FLOW --- */
+.arch-flow-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.arch-layer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.arch-layer:hover {
+    transform: translateX(4px);
+    border-color: var(--primary);
+}
+
+.arch-layer-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.arch-layer-body {
+    flex: 1;
+}
+
+.arch-layer-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.arch-layer-sub {
+    font-size: 0.775rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.arch-connector-bridge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    font-size: 0.75rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* --- CHUNK HEADER MEMORY LAYOUT --- */
+.chunk-layout-bar {
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-top: 14px;
+    height: 56px;
+}
+
+.chunk-segment {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 12px;
+    text-align: center;
+    transition: all 0.2s ease;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chunk-segment.meta {
+    flex: 0 0 30%;
+    background: rgba(99, 102, 241, 0.15);
+    border-right: 2px dashed rgba(99, 102, 241, 0.4);
+}
+
+.chunk-segment.data {
+    flex: 1;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.chunk-segment-name {
+    font-size: 0.775rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--text-main);
+}
+
+.chunk-segment-sub {
+    font-size: 0.675rem;
+    color: var(--text-muted);
+}
+
+/* --- MESI INTERACTIVE STEP TIMELINE --- */
+.mesi-step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.mesi-step-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.mesi-step-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.step-num-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.step-title {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: var(--text-main);
+}
+
+.step-desc {
+    font-size: 0.825rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* --- BIT SLICING COMPARISON CARDS --- */
+.bit-slicing-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.bit-row {
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.bit-cell {
+    padding: 12px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bit-cell:last-child {
+    border-right: none;
+}
+
+.bit-cell.vpn { flex: 2; background: rgba(59, 130, 246, 0.12); }
+.bit-cell.offset { flex: 1.2; background: rgba(16, 185, 129, 0.12); }
+.bit-cell.tag { flex: 2.2; background: rgba(139, 92, 246, 0.12); }
+.bit-cell.index { flex: 1; background: rgba(245, 158, 11, 0.12); }
+
+.bit-cell-label {
+    font-size: 0.775rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--text-main);
+}
+
+.bit-cell-desc {
+    font-size: 0.675rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .tier-blocks-row {
+        grid-template-columns: 1fr;
+    }
+    .tier-blocks-row.scatter {
+        flex-direction: column;
+    }
+    .chunk-layout-bar {
+        height: auto;
+        flex-direction: column;
+    }
+    .chunk-segment.meta {
+        border-right: none;
+        border-bottom: 2px dashed rgba(99, 102, 241, 0.4);
+    }
+    .arch-connector-bridge {
+        padding: 0 10px;
+    }
+}
+
+
 
 

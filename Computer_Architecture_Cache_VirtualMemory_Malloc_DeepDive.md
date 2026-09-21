@@ -139,12 +139,72 @@ Một đơn vị quản lý bộ nhớ cơ bản (Page) chuẩn x86/ARM có kíc
 *   **Trên Bộ nhớ Ảo:** `arr[1023]` và `arr[1024]` nằm ngay sát cạnh nhau (chênh nhau 4 bytes).
 *   **Trên RAM Vật lý:** Trang Ảo 1 có thể nằm ở Khung RAM Vật lý `#100`, còn Trang Ảo 2 có thể bị OS đẩy sang Khung RAM Vật lý `#9500` (cách xa hàng Gigabytes)!
 
-```text
-VIRTUAL MEMORY:   [--- Virtual Page 1 (4KB) ---] [--- Virtual Page 2 (4KB) ---] (Liền kề)
-                                 │                              │
-                                 ▼                              ▼
-PHYSICAL RAM:     [ Physical Frame #100 ] ...... [ Physical Frame #9500 ]       (Rải rác)
-```
+<div class="visual-diagram-card">
+    <div class="diagram-header">
+        <div class="diagram-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            Sơ đồ Ánh xạ Bộ nhớ Ảo sang RAM Thật qua Ranh giới Trang 4KB
+        </div>
+        <span class="diagram-badge badge-blue">Virtual vs Physical Mapping</span>
+    </div>
+    <div class="memory-mapping-container">
+        <div class="memory-tier">
+            <div class="tier-title-bar">
+                <span>TẦNG BỘ NHỚ ẢO (VIRTUAL MEMORY)</span>
+                <span class="diagram-badge badge-green">Liền kề liên tục</span>
+            </div>
+            <div class="tier-blocks-row">
+                <div class="mem-block v-page">
+                    <div class="block-header">
+                        <span class="block-title">Virtual Page 1</span>
+                        <span class="diagram-badge badge-blue">4 KB</span>
+                    </div>
+                    <span class="block-detail">Byte 0 → Byte 4091 (Chứa `arr[0]` ... `arr[1023]`)</span>
+                </div>
+                <div class="mem-block v-page">
+                    <div class="block-header">
+                        <span class="block-title">Virtual Page 2</span>
+                        <span class="diagram-badge badge-blue">4 KB</span>
+                    </div>
+                    <span class="block-detail">Byte 4092 → Byte 8191 (Chứa `arr[1024]` ... `arr[2047]`)</span>
+                </div>
+            </div>
+        </div>
+        <div class="mapping-flow-divider">
+            <div class="mapping-arrow-col">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="4" x2="12" y2="20"></line><polyline points="18 14 12 20 6 14"></polyline></svg>
+                <span>Dịch qua MMU (Page Table)</span>
+            </div>
+            <div class="mapping-arrow-col">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="4" x2="12" y2="20"></line><polyline points="18 14 12 20 6 14"></polyline></svg>
+                <span>Dịch qua MMU (Page Table)</span>
+            </div>
+        </div>
+        <div class="memory-tier">
+            <div class="tier-title-bar">
+                <span>TẦNG RAM VẬT LÝ (PHYSICAL RAM)</span>
+                <span class="diagram-badge badge-rose">Rải rác không liền kề</span>
+            </div>
+            <div class="tier-blocks-row scatter">
+                <div class="mem-block p-frame">
+                    <div class="block-header">
+                        <span class="block-title">Physical Frame #100</span>
+                        <span class="diagram-badge badge-rose">RAM Ô #100</span>
+                    </div>
+                    <span class="block-detail">Địa chỉ vật lý thật của Trang Ảo 1</span>
+                </div>
+                <div class="mem-scatter-gap">⟵ Cách xa hàng GB trên thanh RAM ⟶</div>
+                <div class="mem-block p-frame">
+                    <div class="block-header">
+                        <span class="block-title">Physical Frame #9500</span>
+                        <span class="diagram-badge badge-rose">RAM Ô #9500</span>
+                    </div>
+                    <span class="block-detail">Địa chỉ vật lý thật của Trang Ảo 2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 ---
 
@@ -180,15 +240,56 @@ Nếu bạn (hoặc Kernel) xin trực tiếp từ Buddy Allocator một vùng n
 Để khắc phục việc lãng phí bộ nhớ của Buddy Allocator và tránh việc gọi System Call giật lag, thư viện C chuẩn (`glibc`) cung cấp bộ quản lý bộ nhớ `malloc` ở User Space.
 
 ### 6.1 Mô hình "Buôn Sỉ - Bán Lẻ"
-```text
-[Ứng dụng C/C++]
-       │
-       ▼  (Gõ malloc(32), malloc(1024) - Bán lẻ theo Byte)
-[Thư viện malloc (glibc / User Space)]
-       │
-       ▼  (Chỉ gọi khi kho hết hàng: brk/sbrk hoặc mmap - Buôn sỉ khối lớn)
-[Kernel / Buddy Allocator (Kernel Space)]
-```
+
+<div class="visual-diagram-card">
+    <div class="diagram-header">
+        <div class="diagram-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            Mô hình Phân cấp "Buôn Sỉ - Bán Lẻ" của Malloc
+        </div>
+        <span class="diagram-badge badge-purple">3-Tier Architecture</span>
+    </div>
+    <div class="arch-flow-grid">
+        <div class="arch-layer">
+            <div class="arch-layer-icon" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="15" y2="13"></line></svg>
+            </div>
+            <div class="arch-layer-body">
+                <div class="arch-layer-title">Ứng dụng C / C++ (User Space)</div>
+                <div class="arch-layer-sub">Lập trình viên gọi `malloc(32)`, `malloc(1024)`</div>
+            </div>
+            <span class="diagram-badge badge-blue">Cấp phát mức Byte</span>
+        </div>
+        <div class="arch-connector-bridge">
+            <span>▼ Bán lẻ (Micro-seconds)</span>
+            <span>▲ Trả địa chỉ con trỏ p</span>
+        </div>
+        <div class="arch-layer">
+            <div class="arch-layer-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div class="arch-layer-body">
+                <div class="arch-layer-title">Bộ cấp phát malloc trong glibc (User Space Allocator)</div>
+                <div class="arch-layer-sub">Quản lý Heap, Free Lists / Bins, xén bộ nhớ không gọi Kernel</div>
+            </div>
+            <span class="diagram-badge badge-green">Kho Bán Lẻ (Zero Syscall)</span>
+        </div>
+        <div class="arch-connector-bridge">
+            <span>▼ Buôn sỉ khi cạn Heap</span>
+            <span>▲ Cấp khối 128KB - 2MB</span>
+        </div>
+        <div class="arch-layer">
+            <div class="arch-layer-icon" style="background: rgba(244, 63, 94, 0.12); color: #f43f5e;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <div class="arch-layer-body">
+                <div class="arch-layer-title">Linux Kernel / Buddy Allocator (Kernel Space)</div>
+                <div class="arch-layer-sub">Thực hiện System Call `brk` / `sbrk` / `mmap`</div>
+            </div>
+            <span class="diagram-badge badge-rose">Tổng Kho Quản Lý Trang</span>
+        </div>
+    </div>
+</div>
 
 *   **Buôn sỉ:** Khi mới chạy, `malloc` gọi System Call (`brk`) xin Kernel một phân vùng lớn (Heap, ví dụ 128KB). Kernel giao qua Buddy Allocator.
 *   **Bán lẻ:** Khi bạn gọi `malloc(32)`, `malloc` tự tay lấy "dao" cắt 32 bytes từ phân vùng Heap 128KB đó giao cho bạn. **Thao tác này chạy 100% ở User Space, chỉ tốn vài nanosecond, không hề gọi Kernel.**
@@ -199,14 +300,30 @@ Khi bạn gọi `void *p = malloc(1024);` (Xin 1024 Bytes):
 *   Nó giấu **16 Bytes đầu tiên** làm `Chunk Metadata` (chứa kích thước khối = 1040, và các cờ trạng thái `A|M|P`).
 *   Con trỏ `p` trả về cho bạn **nằm ngay sau 16 bytes Metadata đó**.
 
-```text
-Địa chỉ Heap:  [ Byte 0 ... Byte 15 ] [ Byte 16 .................... Byte 1039 ]
-               └────────────────────┘ └────────────────────────────────────────┘
-                 CHUNK METADATA         VÙNG DỮ LIỆU BẠN SỬ DỤNG (1024 Bytes)
-                                      ▲
-                                      │
-                               Con trỏ p trả về
-```
+<div class="visual-diagram-card">
+    <div class="diagram-header">
+        <div class="diagram-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            Cấu trúc Bộ nhớ Ẩn của 1 Malloc Chunk (Khi xin malloc(1024))
+        </div>
+        <span class="diagram-badge badge-amber">1040 Bytes Total</span>
+    </div>
+    <div class="chunk-layout-bar">
+        <div class="chunk-segment meta">
+            <span class="chunk-segment-name">16 Bytes Metadata Ẩn</span>
+            <span class="chunk-segment-sub">Byte 0 → 15: Chunk Size (1040B) + Flags [A|M|P]</span>
+        </div>
+        <div class="chunk-segment data">
+            <span class="chunk-segment-name">Vùng Dữ Liệu Của Bạn (1024 Bytes)</span>
+            <span class="chunk-segment-sub">Byte 16 → 1039: Con trỏ p trả về trỏ thẳng vào đây</span>
+        </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">
+        <span>← Địa chỉ bắt đầu Chunk (p - 16)</span>
+        <span style="color:var(--primary); font-weight:700;">▲ Con trỏ p = malloc(1024)</span>
+        <span>Địa chỉ Chunk tiếp theo →</span>
+    </div>
+</div>
 
 ### 6.3 Cơ chế `free(p)` và Free Lists / Bins
 Tại sao khi gọi `free(p)`, bạn không cần truyền vào kích thước cần xóa?
