@@ -14,10 +14,9 @@
 ### 1.2 Cấu trúc phân rã của một Địa chỉ Vật lý (Physical Address)
 Khi CPU cần truy xuất bộ nhớ tại một địa chỉ vật lý, phần cứng Cache chia chuỗi bit địa chỉ đó thành 3 phần:
 
-```text
 | TAG (Bit Cao) | INDEX (Bit Giữa) | OFFSET (Bit Thấp) |
-| :--- | :--- | :--- |
-```
+| :---: | :---: | :---: |
+| **Mã định danh (Tag)** để so khớp với `Tag Store` | **Chỉ mục (Index)** để nhảy thẳng đến ô Cache Line | **Vị trí (Offset)** xác định byte trong khối 64B |
 
 *   **Offset ($0 \rightarrow 5$ bit cuối đối với Cache Line 64B):** Do $2^6 = 64$, 6 bit cuối xác định vị trí chính xác của Byte thứ bao nhiêu (từ Byte 0 đến Byte 63) bên trong khối dữ liệu 64 Bytes.
 *   **Index (Các bit tiếp theo):** Dùng làm "chỉ mục" để nhảy trực tiếp đến dòng Cache Line (Set) trong bộ nhớ đệm L1/L2/L3. Số lượng bit Index phụ thuộc vào số ô tủ (Sets) của Cache.
@@ -40,23 +39,29 @@ Giả sử qua phép tính phân rã bit địa chỉ:
 *   `0x00401240` có Index = 9, Tag = `0x00401`.
 
 ### 2.2 Sơ đồ trạng thái Cache Line sau khi nạp mảng
-```text
-**CACHE LINE SỐ 8** (Xác định nhờ Index = 8)
 
-| Thành phần | Giá trị |
-| :--- | :--- |
-| **Valid Bit** | 1 |
-| **Tag Store** | `0x00401` *(Chính là phần Tag của địa chỉ `&arr[0]`)* |
-| **Data Block** | `[Giá trị 64 Bytes: arr[0], arr[1], ..., arr[15]]` |
+| Cache Line | Index | Valid Bit | Tag Store | Khối dữ liệu Data Block (64 Bytes) | Địa chỉ bộ nhớ nạp tương ứng |
+| :--- | :---: | :---: | :---: | :--- | :--- |
+| **Cache Line số 8** | `8` | `1` | `0x00401` | `arr[0]`, `arr[1]`, `arr[2]`, ..., `arr[15]` | `0x00401200` $\rightarrow$ `0x0040123F` |
+| **Cache Line số 9** | `9` | `1` | `0x00401` | `arr[16]`, `arr[17]`, `arr[18]`, ..., `arr[31]` | `0x00401240` $\rightarrow$ `0x0040127F` |
 
-**CACHE LINE SỐ 9** (Xác định nhờ Index = 9)
+#### Chi tiết cấu trúc từng Cache Line:
 
-| Thành phần | Giá trị |
-| :--- | :--- |
-| **Valid Bit** | 1 |
-| **Tag Store** | `0x00401` *(Chính là phần Tag của địa chỉ `&arr[16]`)* |
-| **Data Block** | `[Giá trị 64 Bytes: arr[16], arr[17], ..., arr[31]]` |
-```
+**CACHE LINE SỐ 8** *(Xác định nhờ Index = 8)*
+
+| Thành phần | Giá trị | Ý nghĩa / Giải thích chi tiết |
+| :--- | :--- | :--- |
+| **Valid Bit** | `1` | Dòng Cache đang chứa dữ liệu hợp lệ |
+| **Tag Store** | `0x00401` | $\longleftarrow$ Trùng với phần Tag của địa chỉ `&arr[0]` (`0x00401200`) |
+| **Data Block** | `[Giá trị 64 Bytes: arr[0], arr[1], ..., arr[15]]` | 16 phần tử kiểu `int` đầu tiên của mảng |
+
+**CACHE LINE SỐ 9** *(Xác định nhờ Index = 9)*
+
+| Thành phần | Giá trị | Ý nghĩa / Giải thích chi tiết |
+| :--- | :--- | :--- |
+| **Valid Bit** | `1` | Dòng Cache đang chứa dữ liệu hợp lệ |
+| **Tag Store** | `0x00401` | $\longleftarrow$ Trùng với phần Tag của địa chỉ `&arr[16]` (`0x00401240`) |
+| **Data Block** | `[Giá trị 64 Bytes: arr[16], arr[17], ..., arr[31]]` | 16 phần tử kiểu `int` tiếp theo của mảng |
 
 ### 2.3 Diễn biến từng bước khi CPU thực hiện lệnh: `int x = arr[5];`
 1.  **Tính Địa chỉ:** CPU tính ra địa chỉ của `arr[5]` là `0x00401214` (vì $5 \times 4 = 20 = 0x14$ bytes kể từ đầu mảng).
