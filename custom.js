@@ -163,28 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         mdBody.innerHTML = marked.parse(rawMarkdown);
 
-        // Code Block Line Numbers & Gutter
-        mdBody.querySelectorAll('pre code').forEach(codeEl => {
-            const lines = codeEl.innerHTML.split('\n');
-            const count = (lines.length > 0 && lines[lines.length - 1].trim() === '') ? lines.length - 1 : lines.length;
-            if (count > 2) {
-                const gutter = document.createElement('div');
-                gutter.className = 'code-gutter';
-                gutter.setAttribute('aria-hidden', 'true');
-                let gutterHtml = '';
-                for (let i = 1; i <= count; i++) {
-                    gutterHtml += `<span class="code-gutter-line">${i}</span>`;
-                }
-                gutter.innerHTML = gutterHtml;
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'code-lines-wrapper';
-                codeEl.parentNode.insertBefore(wrapper, codeEl);
-                wrapper.appendChild(gutter);
-                wrapper.appendChild(codeEl);
-            }
-        });
-
         // Interactive Click-to-Copy for Inline Code
         mdBody.querySelectorAll('p code, li code').forEach(codeEl => {
             if (codeEl.closest('pre')) return;
@@ -226,22 +204,70 @@ document.addEventListener('DOMContentLoaded', () => {
             MathJax.typesetPromise([mdBody]).catch(err => console.error('MathJax error:', err.message));
         }
 
-        // Code Block Fullscreen Backdrop
-        const codeBackdrop = document.createElement('div');
-        codeBackdrop.className = 'code-expand-backdrop';
-        codeBackdrop.style.display = 'none';
-        document.body.appendChild(codeBackdrop);
+        // Dedicated Fullscreen Code Modal Portal
+        let codeModal = document.getElementById('code-expand-modal');
+        if (!codeModal) {
+            codeModal = document.createElement('div');
+            codeModal.id = 'code-expand-modal';
+            codeModal.innerHTML = `
+                <div class="code-modal-card">
+                    <div class="mac-window-header">
+                        <div class="mac-dots">
+                            <div class="mac-dot red code-modal-close" title="Đóng (Esc)"></div>
+                            <div class="mac-dot yellow code-modal-close" title="Thu nhỏ (Esc)"></div>
+                            <div class="mac-dot green" title="Đang ở chế độ toàn màn hình"></div>
+                        </div>
+                        <div class="code-lang-label" id="modal-lang-label">CODE</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button class="code-wrap-toggle" id="modal-wrap-btn" title="Tự động xuống dòng">Wrap</button>
+                            <button class="copy-btn-floating" id="modal-copy-btn">Copy</button>
+                            <button class="code-modal-close-btn" id="modal-close-btn" title="Đóng">✕ Đóng (Esc)</button>
+                        </div>
+                    </div>
+                    <div class="code-modal-body">
+                        <pre><code id="modal-code-content"></code></pre>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(codeModal);
+        }
 
-        const closeExpandedCode = () => {
-            document.querySelectorAll('.markdown-body pre.code-expanded').forEach(p => {
-                p.classList.remove('code-expanded');
-                const btn = p.querySelector('.code-expand-toggle');
-                if (btn) btn.classList.remove('active');
-            });
-            codeBackdrop.style.display = 'none';
+        const modalCodeContent = codeModal.querySelector('#modal-code-content');
+        const modalLangLabel = codeModal.querySelector('#modal-lang-label');
+        const modalWrapBtn = codeModal.querySelector('#modal-wrap-btn');
+        const modalCopyBtn = codeModal.querySelector('#modal-copy-btn');
+        const modalCloseBtn = codeModal.querySelector('#modal-close-btn');
+        const modalCard = codeModal.querySelector('.code-modal-card');
+
+        const closeCodeModal = () => {
+            codeModal.classList.remove('show');
+            document.body.classList.remove('code-modal-open');
         };
 
-        codeBackdrop.onclick = closeExpandedCode;
+        modalCloseBtn.onclick = closeCodeModal;
+        codeModal.querySelectorAll('.code-modal-close').forEach(dot => dot.onclick = closeCodeModal);
+        codeModal.onclick = (e) => {
+            if (e.target === codeModal) closeCodeModal();
+        };
+
+        if (modalWrapBtn) {
+            modalWrapBtn.onclick = (e) => {
+                e.stopPropagation();
+                modalCard.classList.toggle('code-wrapped');
+                modalWrapBtn.classList.toggle('active');
+            };
+        }
+
+        if (modalCopyBtn) {
+            modalCopyBtn.onclick = (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(modalCodeContent.innerText);
+                const orig = modalCopyBtn.innerHTML;
+                modalCopyBtn.innerHTML = '<span style="color:#10b981;font-weight:600;">✓ Copied</span>';
+                showToast('✓ Đã sao chép mã nguồn vào bộ nhớ tạm!');
+                setTimeout(() => modalCopyBtn.innerHTML = orig, 1800);
+            };
+        }
 
         // Code Block Actions (Copy, Word Wrap & Fullscreen Expand)
         document.querySelectorAll('.markdown-body pre').forEach(pre => {
@@ -249,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const wrapBtn = pre.querySelector('.code-wrap-toggle');
             const expandBtn = pre.querySelector('.code-expand-toggle');
             const greenDot = pre.querySelector('.mac-dot.green');
+            const langLabel = pre.querySelector('.code-lang-label');
             const codeEl = pre.querySelector('code');
             
             if (copyBtn && codeEl) {
@@ -274,20 +301,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
 
-            const toggleExpand = (e) => {
+            const openExpand = (e) => {
                 if (e) e.stopPropagation();
-                const isExp = pre.classList.toggle('code-expanded');
-                if (expandBtn) expandBtn.classList.toggle('active', isExp);
-                if (isExp) {
-                    codeBackdrop.style.display = 'block';
-                    showToast('Đã phóng to đoạn mã. Nhấn Esc để đóng.');
-                } else {
-                    codeBackdrop.style.display = 'none';
+                if (!codeEl) return;
+                
+                modalCodeContent.innerHTML = codeEl.innerHTML;
+                modalCodeContent.className = codeEl.className;
+                if (langLabel) {
+                    modalLangLabel.innerText = langLabel.innerText;
+                    modalLangLabel.setAttribute('data-lang', langLabel.getAttribute('data-lang') || '');
                 }
+                
+                if (pre.classList.contains('code-wrapped')) {
+                    modalCard.classList.add('code-wrapped');
+                    if (modalWrapBtn) modalWrapBtn.classList.add('active');
+                } else {
+                    modalCard.classList.remove('code-wrapped');
+                    if (modalWrapBtn) modalWrapBtn.classList.remove('active');
+                }
+
+                codeModal.classList.add('show');
+                document.body.classList.add('code-modal-open');
+                showToast('Đã mở toàn màn hình. Nhấn Esc để đóng.');
             };
 
-            if (expandBtn) expandBtn.onclick = toggleExpand;
-            if (greenDot) greenDot.onclick = toggleExpand;
+            if (expandBtn) expandBtn.onclick = openExpand;
+            if (greenDot) {
+                greenDot.style.cursor = 'pointer';
+                greenDot.title = 'Phóng to toàn màn hình (Expand)';
+                greenDot.onclick = openExpand;
+            }
         });
 
         // Callouts / Admonitions Transformation
@@ -1066,10 +1109,10 @@ document.addEventListener('DOMContentLoaded', () => {
             closeSpotlight();
             closeKbdModal();
             lightbox.classList.remove('show');
-            const codeBackdrop = document.querySelector('.code-expand-backdrop');
-            if (codeBackdrop && codeBackdrop.style.display !== 'none') {
-                document.querySelectorAll('.markdown-body pre.code-expanded').forEach(p => p.classList.remove('code-expanded'));
-                codeBackdrop.style.display = 'none';
+            const codeModal = document.getElementById('code-expand-modal');
+            if (codeModal && codeModal.classList.contains('show')) {
+                codeModal.classList.remove('show');
+                document.body.classList.remove('code-modal-open');
             }
             return;
         }
