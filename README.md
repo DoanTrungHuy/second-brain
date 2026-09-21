@@ -32,13 +32,13 @@ Toàn bộ tài liệu được đóng gói thành một trang web tài liệu t
 
 ## 📚 Danh mục Chủ đề & Tài liệu (Documentation)
 
-| # | Chủ đề tài liệu | Bản Web (HTML) | Bản Markdown (.md) |
-|---|----------------|----------------|--------------------|
-| 1 | **Kiến trúc Cache, Virtual Memory & Malloc Deep-Dive**<br>*(Tag, Index, Offset, VIPT, PIPT, 4-Level Paging, sbrk/mmap)* | [Xem bản Web](https://doantrunghuy.github.io/second-brain/index.html) | [`Computer_Architecture_Cache_VirtualMemory_Malloc_DeepDive.md`](Computer_Architecture_Cache_VirtualMemory_Malloc_DeepDive.md) |
-| 2 | **Cơ chế phần cứng MMU, TLB & Page Table**<br>*(TLB Hit/Miss, Multi-level Paging, Two-step translation)* | [Xem bản Web](https://doantrunghuy.github.io/second-brain/mmu-tlb-page-table.html) | [`MMU_TLB_PageTable_Cache_Summary.md`](MMU_TLB_PageTable_Cache_Summary.md) |
-| 3 | **Giao thức Đồng bộ Cache Đa nhân MESI**<br>*(Modified, Exclusive, Shared, Invalid, Bus Snooping)* | [Xem bản Web](https://doantrunghuy.github.io/second-brain/mesi-protocol.html) | [`MESI_Cache_Coherence_Protocol.md`](MESI_Cache_Coherence_Protocol.md) |
-| 4 | **Tối ưu Đồng bộ: Phân tích SpinLock vs OS Mutex**<br>*(Futex, Context Switch overhead, Atomic CAS, Trade-offs)* | [Xem bản Web](https://doantrunghuy.github.io/second-brain/spinlock-vs-mutex.html) | [`SpinLock_TradeOff.md`](SpinLock_TradeOff.md) |
-| 5 | **Quản lý Bộ nhớ Hiện đại: std::string vs std::string_view**<br>*(Zero-copy, SSO, Pointer + Length, Dangling reference)* | [Xem bản Web](https://doantrunghuy.github.io/second-brain/string-vs-string-view.html) | [`string_vs_string_view.md`](string_vs_string_view.md) |
+| # | Chủ đề tài liệu | Bản Web Trực quan (HTML) | Bản Markdown Nguồn (.md) |
+|---|----------------|--------------------------|--------------------------|
+| 1 | **Kiến trúc Cache, Virtual Memory & Malloc Deep-Dive**<br>*(Tag, Index, Offset, VIPT, PIPT, 4-Level Paging, sbrk/mmap)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/index.html) | [`Computer_Architecture_...DeepDive.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/Computer_Architecture_Cache_VirtualMemory_Malloc_DeepDive.md) |
+| 2 | **Cơ chế phần cứng MMU, TLB & Page Table**<br>*(TLB Hit/Miss, Multi-level Paging, Two-step translation)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/mmu-tlb-page-table.html) | [`MMU_TLB_PageTable_Cache_Summary.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/MMU_TLB_PageTable_Cache_Summary.md) |
+| 3 | **Giao thức Đồng bộ Cache Đa nhân MESI**<br>*(Modified, Exclusive, Shared, Invalid, Bus Snooping)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/mesi-protocol.html) | [`MESI_Cache_Coherence_Protocol.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/MESI_Cache_Coherence_Protocol.md) |
+| 4 | **Tối ưu Đồng bộ: Phân tích SpinLock vs OS Mutex**<br>*(Futex, Context Switch overhead, Atomic CAS, Trade-offs)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/spinlock-vs-mutex.html) | [`SpinLock_TradeOff.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/SpinLock_TradeOff.md) |
+| 5 | **Quản lý Bộ nhớ Hiện đại: std::string vs std::string_view**<br>*(Zero-copy, SSO, Pointer + Length, Dangling reference)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/string-vs-string-view.html) | [`string_vs_string_view.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/string_vs_string_view.md) |
 
 ---
 
