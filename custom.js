@@ -90,11 +90,49 @@ document.addEventListener('DOMContentLoaded', () => {
     
     setTheme(localStorage.getItem('theme') || 'light', false);
 
-    themeBtn.onclick = () => {
+    const toggleThemeWithTransition = (e) => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        setTheme(nextTheme, true);
+
+        if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setTheme(nextTheme, true);
+            return;
+        }
+
+        const rect = themeBtn.getBoundingClientRect();
+        const x = e && e.clientX ? e.clientX : (rect.left + rect.width / 2);
+        const y = e && e.clientY ? e.clientY : (rect.top + rect.height / 2);
+        const endRadius = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+        );
+
+        const transition = document.startViewTransition(() => {
+            setTheme(nextTheme, false);
+        });
+
+        transition.ready.then(() => {
+            document.documentElement.animate(
+                {
+                    clipPath: [
+                        `circle(0px at ${x}px ${y}px)`,
+                        `circle(${endRadius}px at ${x}px ${y}px)`
+                    ]
+                },
+                {
+                    duration: 480,
+                    easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    pseudoElement: '::view-transition-new(root)'
+                }
+            );
+            themeBtn.classList.remove('theme-animating');
+            void themeBtn.offsetWidth;
+            themeBtn.classList.add('theme-animating');
+            showToast(nextTheme === 'dark' ? '🌙 Đã chuyển sang giao diện Tối' : '☀️ Đã chuyển sang giao diện Sáng');
+        });
     };
+
+    themeBtn.onclick = toggleThemeWithTransition;
 
     // ==========================================================================
     // 3. RENDER MARKDOWN, SYNTAX HIGHLIGHTING & TERMINAL ACTIONS
@@ -105,14 +143,83 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalCode = renderer.code;
         renderer.code = function(code, language, isEscaped) {
             const rendered = originalCode.call(this, code, language, isEscaped);
+            const langClean = (language || 'text').toLowerCase();
             return rendered.replace(
                 '<pre>', 
-                '<pre><div class="mac-window-header"><div class="mac-dots"><div class="mac-dot red" title="Đóng"></div><div class="mac-dot yellow" title="Thu nhỏ"></div><div class="mac-dot green" title="Phóng to đoạn mã"></div></div><div class="code-lang-label">' + (language || 'text') + '</div><div style="display:flex;align-items:center;"><button class="code-wrap-toggle" title="Tự động xuống dòng">Wrap</button><button class="code-expand-toggle" title="Phóng to đoạn mã"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Expand</button><button class="copy-btn-floating">Copy</button></div></div>'
+                '<pre><div class="mac-window-header"><div class="mac-dots"><div class="mac-dot red" title="Đóng"></div><div class="mac-dot yellow" title="Thu nhỏ"></div><div class="mac-dot green" title="Phóng to đoạn mã"></div></div><div class="code-lang-label" data-lang="' + langClean + '">' + (language || 'text') + '</div><div style="display:flex;align-items:center;"><button class="code-wrap-toggle" title="Tự động xuống dòng">Wrap</button><button class="code-expand-toggle" title="Phóng to đoạn mã"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Expand</button><button class="copy-btn-floating">Copy</button></div></div>'
             );
         };
         
-        marked.setOptions({ renderer: renderer });
+        marked.setOptions({
+            renderer: renderer,
+            highlight: function(code, lang) {
+                if (typeof hljs !== 'undefined') {
+                    if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+                    return hljs.highlightAuto(code).value;
+                }
+                return code;
+            },
+            breaks: true
+        });
         mdBody.innerHTML = marked.parse(rawMarkdown);
+
+        // Code Block Line Numbers & Gutter
+        mdBody.querySelectorAll('pre code').forEach(codeEl => {
+            const lines = codeEl.innerHTML.split('\n');
+            const count = (lines.length > 0 && lines[lines.length - 1].trim() === '') ? lines.length - 1 : lines.length;
+            if (count > 2) {
+                const gutter = document.createElement('div');
+                gutter.className = 'code-gutter';
+                gutter.setAttribute('aria-hidden', 'true');
+                let gutterHtml = '';
+                for (let i = 1; i <= count; i++) {
+                    gutterHtml += `<span class="code-gutter-line">${i}</span>`;
+                }
+                gutter.innerHTML = gutterHtml;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-lines-wrapper';
+                codeEl.parentNode.insertBefore(wrapper, codeEl);
+                wrapper.appendChild(gutter);
+                wrapper.appendChild(codeEl);
+            }
+        });
+
+        // Interactive Click-to-Copy for Inline Code
+        mdBody.querySelectorAll('p code, li code').forEach(codeEl => {
+            if (codeEl.closest('pre')) return;
+            codeEl.classList.add('interactive-inline-code');
+            codeEl.setAttribute('title', 'Nhấn để chép mã');
+            
+            codeEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const text = codeEl.innerText.trim();
+                navigator.clipboard.writeText(text);
+                codeEl.classList.add('code-copied');
+                showToast(`✓ Đã sao chép: <code>${text.length > 25 ? text.substring(0, 22) + '...' : text}</code>`, 1600);
+                setTimeout(() => codeEl.classList.remove('code-copied'), 1200);
+            });
+        });
+
+        // Table Responsive Scroll Wrapper with Shadow Indicator
+        mdBody.querySelectorAll('table').forEach(table => {
+            if (table.parentElement.classList.contains('table-inner')) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-scroll-wrapper';
+            const inner = document.createElement('div');
+            inner.className = 'table-inner';
+            table.parentNode.insertBefore(wrapper, table);
+            inner.appendChild(table);
+            wrapper.appendChild(inner);
+
+            const updateScrollHint = () => {
+                const hasMoreToScroll = inner.scrollWidth > inner.clientWidth && (inner.scrollLeft + inner.clientWidth < inner.scrollWidth - 8);
+                wrapper.classList.toggle('can-scroll-right', hasMoreToScroll);
+            };
+            inner.addEventListener('scroll', updateScrollHint, { passive: true });
+            window.addEventListener('resize', updateScrollHint, { passive: true });
+            setTimeout(updateScrollHint, 200);
+        });
 
         // MathJax Typeset Trigger
         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
@@ -291,9 +398,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // ======================================================================
-        // 4. TABLE OF CONTENTS IN RIGHT SIDEBAR
+        // 4. TABLE OF CONTENTS IN RIGHT SIDEBAR & DYNAMIC GLIDER
         // ======================================================================
+        const triggerTargetPulse = (targetEl) => {
+            if (!targetEl) return;
+            targetEl.classList.remove('heading-target-pulse');
+            void targetEl.offsetWidth; // Force reflow
+            targetEl.classList.add('heading-target-pulse');
+            setTimeout(() => targetEl.classList.remove('heading-target-pulse'), 1900);
+        };
+
         const headings = mdBody.querySelectorAll('h2, h3');
+        let tocProgressPill = null;
+        let tocGlider = null;
+
         if (headings.length > 0) {
             const rightSidebar = document.createElement('div');
             rightSidebar.id = 'right-sidebar';
@@ -301,10 +419,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const tocContainer = document.createElement('div');
             tocContainer.id = 'toc-container';
             
+            const tocTitleWrapper = document.createElement('div');
+            tocTitleWrapper.className = 'toc-title-wrapper';
+
             const tocTitle = document.createElement('div');
             tocTitle.className = 'toc-title';
             tocTitle.innerText = 'MỤC LỤC';
-            tocContainer.appendChild(tocTitle);
+
+            tocProgressPill = document.createElement('span');
+            tocProgressPill.className = 'toc-progress-pill';
+            tocProgressPill.innerText = '0%';
+
+            tocTitleWrapper.appendChild(tocTitle);
+            tocTitleWrapper.appendChild(tocProgressPill);
+            tocContainer.appendChild(tocTitleWrapper);
+
+            tocGlider = document.createElement('div');
+            tocGlider.className = 'toc-glider';
+            tocContainer.appendChild(tocGlider);
 
             headings.forEach((h, index) => {
                 const text = h.innerText.replace(/^#+\s*/, '').trim();
@@ -323,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     history.pushState(null, null, '#' + h.id);
                     h.scrollIntoView({ behavior: 'smooth' });
+                    triggerTargetPulse(h);
                 };
                 
                 tocContainer.appendChild(item);
@@ -349,12 +482,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => anchor.innerHTML = orig, 1500);
                     window.history.pushState(null, null, '#' + h.id);
                     h.scrollIntoView({ behavior: 'smooth' });
+                    triggerTargetPulse(h);
                 };
                 
                 h.insertBefore(anchor, h.firstChild);
             });
 
-            // ScrollSpy for Active TOC Item
+            // ScrollSpy for Active TOC Item & Glider
             const tocItems = document.querySelectorAll('.toc-item');
             const scrollSpy = () => {
                 let currentId = null;
@@ -385,11 +519,114 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.classList.add('active');
                     }
                 });
+
+                const activeItem = tocContainer.querySelector('.toc-item.active');
+                if (activeItem && tocGlider) {
+                    tocGlider.classList.add('visible');
+                    tocGlider.style.transform = `translateY(${activeItem.offsetTop}px)`;
+                    tocGlider.style.height = `${activeItem.offsetHeight}px`;
+                } else if (tocGlider) {
+                    tocGlider.classList.remove('visible');
+                }
+
+                const stickySection = document.getElementById('sticky-active-section');
+                if (stickySection && currentId) {
+                    const targetH = document.getElementById(currentId);
+                    if (targetH) {
+                        stickySection.innerText = targetH.innerText.replace(/^#+\s*/, '').trim();
+                    }
+                }
             };
             
             window.addEventListener('scroll', scrollSpy, { passive: true });
             setTimeout(scrollSpy, 300);
         }
+
+        // Support direct anchor jump with pulse highlight
+        const handleHashNav = () => {
+            if (window.location.hash) {
+                const id = decodeURIComponent(window.location.hash.substring(1));
+                const target = document.getElementById(id);
+                if (target) {
+                    setTimeout(() => {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                        triggerTargetPulse(target);
+                    }, 350);
+                }
+            }
+        };
+        window.addEventListener('hashchange', handleHashNav);
+        setTimeout(handleHashNav, 250);
+
+        // ======================================================================
+        // STICKY GLASS FLOATING TOPBAR & FONT SIZE CONTROLS
+        // ======================================================================
+        const savedFontSize = localStorage.getItem('doc-font-size') || 'md';
+        const setFontSize = (size) => {
+            document.body.setAttribute('data-font-size', size);
+            localStorage.setItem('doc-font-size', size);
+            document.querySelectorAll('.font-size-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-size') === size);
+            });
+        };
+        setFontSize(savedFontSize);
+
+        const activeNav = document.querySelector('.nav-item.active');
+        let categoryName = 'Tài liệu';
+        if (activeNav) {
+            let prev = activeNav.previousElementSibling;
+            while (prev) {
+                if (prev.classList.contains('category-title')) {
+                    categoryName = prev.innerText;
+                    break;
+                }
+                prev = prev.previousElementSibling;
+            }
+        }
+        const articleTitle = mdBody.querySelector('h1')?.innerText || document.title.split('|')[0].trim();
+
+        const stickyTopbar = document.createElement('div');
+        stickyTopbar.className = 'sticky-topbar';
+        stickyTopbar.innerHTML = `
+            <div class="sticky-breadcrumb">
+                <span>${categoryName}</span>
+                <span class="crumb-sep">/</span>
+                <span class="crumb-title" id="sticky-active-section">${articleTitle}</span>
+            </div>
+            <div class="sticky-actions">
+                <div class="font-size-group" title="Chỉnh cỡ chữ đọc bài (A- / A / A+)">
+                    <button class="font-size-btn ${savedFontSize === 'sm' ? 'active' : ''}" data-size="sm">A-</button>
+                    <button class="font-size-btn ${savedFontSize === 'md' ? 'active' : ''}" data-size="md">A</button>
+                    <button class="font-size-btn ${savedFontSize === 'lg' ? 'active' : ''}" data-size="lg">A+</button>
+                </div>
+                <button class="sticky-btn" id="sticky-zen-btn" title="Chế độ tập trung (Phím: Z)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    <span>Zen</span>
+                </button>
+                <button class="sticky-btn" id="sticky-top-btn" title="Lên đầu trang">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    <span>Đầu trang</span>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(stickyTopbar);
+
+        stickyTopbar.querySelectorAll('.font-size-btn').forEach(btn => {
+            btn.addEventListener('click', () => setFontSize(btn.getAttribute('data-size')));
+        });
+
+        stickyTopbar.querySelector('#sticky-zen-btn')?.addEventListener('click', () => {
+            document.body.classList.toggle('focus-mode');
+            if (document.body.classList.contains('focus-mode')) {
+                showToast('Chế độ tập trung (Zen Mode) đã kích hoạt! Nhấn Z để thoát.');
+            } else {
+                showToast('Đã thoát chế độ tập trung.');
+            }
+        });
+
+        stickyTopbar.querySelector('#sticky-top-btn')?.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
 
         // ======================================================================
         // 5. NEXT / PREVIOUS ARTICLE BOTTOM NAVIGATION
@@ -475,10 +712,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="back-to-top-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
         </div>
+        <div class="back-to-top-percent">0%</div>
     `;
     document.body.appendChild(backToTopBtn);
 
     const circleProgress = backToTopBtn.querySelector('.progress-ring__circle');
+    const backToTopPercent = backToTopBtn.querySelector('.back-to-top-percent');
 
     window.addEventListener('scroll', () => {
         const h = document.documentElement;
@@ -487,12 +726,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const sh = 'scrollHeight' in h ? h.scrollHeight : b.scrollHeight;
         const scrollMax = sh - h.clientHeight;
         const percent = scrollMax > 0 ? (st / scrollMax) * 100 : 0;
+        const roundPercent = Math.round(percent) + '%';
 
         progBar.style.width = Math.min(100, Math.max(0, percent)) + '%';
 
         if (circleProgress) {
             const offset = circumference - (Math.min(100, Math.max(0, percent)) / 100) * circumference;
             circleProgress.style.strokeDashoffset = offset;
+        }
+
+        if (backToTopPercent) {
+            backToTopPercent.innerText = roundPercent;
+        }
+
+        if (tocProgressPill) {
+            tocProgressPill.innerText = roundPercent;
+        }
+
+        const stickyTop = document.querySelector('.sticky-topbar');
+        if (stickyTop) {
+            if (window.scrollY > 240) {
+                stickyTop.classList.add('visible');
+            } else {
+                stickyTop.classList.remove('visible');
+            }
         }
 
         if (window.scrollY > 350) {
@@ -518,6 +775,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="text" class="spotlight-input" placeholder="Tìm kiếm kiến thức, thuật ngữ (VIPT, SpinLock, Malloc...)" autofocus>
                 <div class="spotlight-esc" id="spotlight-close-btn" style="cursor:pointer;">ESC</div>
             </div>
+            <div class="spotlight-quick-tags">
+                <span class="spotlight-tag-label">Gợi ý:</span>
+                <button class="spotlight-tag-pill" data-query="Cache Line">Cache Line</button>
+                <button class="spotlight-tag-pill" data-query="Virtual Memory">Virtual Memory</button>
+                <button class="spotlight-tag-pill" data-query="Page Table">Page Table</button>
+                <button class="spotlight-tag-pill" data-query="TLB">TLB</button>
+                <button class="spotlight-tag-pill" data-query="SpinLock">SpinLock</button>
+                <button class="spotlight-tag-pill" data-query="Mutex">Mutex</button>
+                <button class="spotlight-tag-pill" data-query="MESI">MESI</button>
+                <button class="spotlight-tag-pill" data-query="string_view">string_view</button>
+            </div>
             <div class="spotlight-results">
                 <div class="spotlight-empty">Gõ từ khóa bất kỳ để tìm kiếm toàn bộ tài liệu...</div>
             </div>
@@ -530,6 +798,19 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     `;
     document.body.appendChild(searchModal);
+
+    searchModal.querySelectorAll('.spotlight-tag-pill').forEach(pill => {
+        pill.addEventListener('click', (e) => {
+            e.preventDefault();
+            const query = pill.getAttribute('data-query');
+            const spotInput = searchModal.querySelector('.spotlight-input');
+            if (spotInput) {
+                spotInput.value = query;
+                spotInput.dispatchEvent(new Event('input'));
+                spotInput.focus();
+            }
+        });
+    });
 
     // Add Shortcut Badge in Sidebar Search Box
     const searchBox = document.querySelector('.search-box');
@@ -698,10 +979,25 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => ripple.remove(), 600);
     }
 
-    document.querySelectorAll('.meta-btn, .post-nav-card, .theme-toggle, #back-to-top, #kbd-shortcuts-btn, .copy-btn-floating').forEach(btn => {
+    document.querySelectorAll('.meta-btn, .post-nav-card, .theme-toggle, #back-to-top, #kbd-shortcuts-btn, .copy-btn-floating, .sticky-btn, .font-size-btn').forEach(btn => {
         btn.classList.add('has-ripple');
         btn.addEventListener('pointerdown', createRipple);
     });
+
+    // Mouse-Tracking Spotlight Glow on Cards and Containers
+    const attachSpotlightGlow = () => {
+        document.querySelectorAll('.markdown-body pre, .post-nav-card, .callout, .spotlight-card, .table-scroll-wrapper').forEach(el => {
+            el.classList.add('spotlight-card-hover');
+            el.addEventListener('pointermove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                el.style.setProperty('--mouse-x', `${x}px`);
+                el.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    };
+    attachSpotlightGlow();
 
     if ('IntersectionObserver' in window) {
         const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -798,11 +1094,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // 'T' to toggle theme
+        // 'T' to toggle theme with Circular View Transition
         if (e.key.toLowerCase() === 't') {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(nextTheme, true);
+            toggleThemeWithTransition();
         }
 
         // 'Z' to toggle Zen Mode
