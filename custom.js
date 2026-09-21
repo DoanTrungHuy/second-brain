@@ -858,8 +858,14 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.documentElement.classList.add('theme-switching');
                 const transition = document.startViewTransition(() => {
                     applyPageUpdate();
+                });
+                transition.finished.then(() => {
+                    document.documentElement.classList.remove('theme-switching');
+                }).catch(() => {
+                    document.documentElement.classList.remove('theme-switching');
                 });
                 await transition.finished;
             } else {
