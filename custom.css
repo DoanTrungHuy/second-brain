@@ -2525,6 +2525,27 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
     view-transition-name: article-body;
 }
 
+/* Isolate static UI elements from view transitions */
+#sidebar {
+    view-transition-name: sidebar-panel;
+}
+.sticky-topbar {
+    view-transition-name: topbar-panel;
+}
+#right-sidebar {
+    view-transition-name: rightsidebar-panel;
+}
+
+/* Keep static elements frozen (no animation) during transitions */
+::view-transition-old(sidebar-panel),
+::view-transition-new(sidebar-panel),
+::view-transition-old(topbar-panel),
+::view-transition-new(topbar-panel),
+::view-transition-old(rightsidebar-panel),
+::view-transition-new(rightsidebar-panel) {
+    animation: none;
+}
+
 /* SPA View Transition - article body slide animation */
 @keyframes spa-slide-out {
     from { opacity: 1; transform: translateY(0); filter: blur(0); }
