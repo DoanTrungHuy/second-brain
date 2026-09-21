@@ -9,9 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const showToast = (message, duration = 2600) => {
         const toast = document.createElement('div');
         toast.className = 'toast-message';
+        const cleanMessage = typeof message === 'string' ? message.replace(/^✓\s*/, '') : message;
         toast.innerHTML = `
             <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            <span>${message}</span>
+            <span>${cleanMessage}</span>
         `;
         toastContainer.appendChild(toast);
 
@@ -118,6 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
             Math.max(y, window.innerHeight - y)
         );
 
+        // Suppress per-element transitions during view transition
+        document.documentElement.classList.add('theme-switching');
+
         const transition = document.startViewTransition(() => {
             setTheme(nextTheme, false);
         });
@@ -140,6 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
             void themeBtn.offsetWidth;
             themeBtn.classList.add('theme-animating');
             showToast(nextTheme === 'dark' ? '🌙 Đã chuyển sang giao diện Tối' : '☀️ Đã chuyển sang giao diện Sáng');
+        });
+
+        // Remove suppression class after transition finishes
+        transition.finished.then(() => {
+            document.documentElement.classList.remove('theme-switching');
+        }).catch(() => {
+            document.documentElement.classList.remove('theme-switching');
         });
     };
 
@@ -248,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             navigator.clipboard.writeText(modalCodeContent.innerText);
             const orig = modalCopyBtn.innerHTML;
             modalCopyBtn.innerHTML = '<span style="color:#10b981;font-weight:600;">✓ Copied</span>';
-            showToast('✓ Đã sao chép mã nguồn vào bộ nhớ tạm!');
+            showToast('Đã sao chép mã nguồn vào bộ nhớ tạm!');
             setTimeout(() => modalCopyBtn.innerHTML = orig, 1800);
         };
     }
@@ -298,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const text = codeEl.innerText.trim();
                 navigator.clipboard.writeText(text);
                 codeEl.classList.add('code-copied');
-                showToast(`✓ Đã sao chép: <code>${text.length > 25 ? text.substring(0, 22) + '...' : text}</code>`, 1600);
+                showToast(`Đã sao chép: <code>${text.length > 25 ? text.substring(0, 22) + '...' : text}</code>`, 1600);
                 setTimeout(() => codeEl.classList.remove('code-copied'), 1200);
             });
         });

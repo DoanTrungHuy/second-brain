@@ -8,6 +8,31 @@ html.preload * {
     transition: none !important;
 }
 
+/* THEME SWITCHING - Suppress per-element transitions during View Transition */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+}
+
+/* View Transition API - Custom circular reveal animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+    z-index: 1;
+}
+::view-transition-new(root) {
+    z-index: 9999;
+}
+
 /* ==========================================================================
    SYSTEM KNOWLEDGE - ULTRA MODERN & SMOOTH STYLESHEET
    ========================================================================== */
