@@ -66,8 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
     themeBtn.id = 'theme-icon';
     themeBtn.title = 'Chuyển giao diện (Phím tắt: T)';
     
+    const sidebarCloseBtn = document.createElement('button');
+    sidebarCloseBtn.className = 'sidebar-close-btn';
+    sidebarCloseBtn.title = 'Đóng menu';
+    sidebarCloseBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    sidebarCloseBtn.onclick = (e) => {
+        e.stopPropagation();
+        sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+    };
+
     if (sidebarBrand) {
         sidebarBrand.appendChild(themeBtn);
+        sidebarBrand.appendChild(sidebarCloseBtn);
     }
 
     const setTheme = (theme, animate = false) => {
