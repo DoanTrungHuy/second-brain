@@ -2521,7 +2521,8 @@ body[data-font-size="lg"] .markdown-body li { font-size: 1.1rem; line-height: 1.
     100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
 }
 
-.article-container {
+/* Only assign view-transition-name during SPA navigation, not theme toggle */
+html.spa-navigating .article-container {
     view-transition-name: article-body;
 }
 

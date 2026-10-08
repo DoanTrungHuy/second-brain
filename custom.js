@@ -165,7 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { url: "mmu-tlb-page-table.html", title: "Phần cứng MMU, TLB & Page Table" },
         { url: "mesi-protocol.html", title: "Giao thức Đồng bộ MESI" },
         { url: "spinlock-vs-mutex.html", title: "Tối ưu Đồng bộ: SpinLock vs Mutex" },
-        { url: "string-vs-string-view.html", title: "Quản lý Bộ nhớ: std::string_view" }
+        { url: "string-vs-string-view.html", title: "Quản lý Bộ nhớ: std::string_view" },
+        { url: "rru-vs-antenna.html", title: "So sánh RRU & Anten Viễn thông" }
     ];
 
     // In-memory cache for ultra-fast instant page switching (0ms latency)

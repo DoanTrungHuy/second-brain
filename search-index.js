@@ -495,5 +495,40 @@ const windowSearchIndex = [
     "category": "C++ Performance Optimization",
     "section": "Quy tắc vàng khi dùng `std::string_view`:",
     "text": "Luôn đảm bảo Vòng đời Lifetime của Chuỗi gốc Vật chủ phải sống lâu hơn hoặc bằng với std::string_view của nó. Chỉ nên dùng string_view làm tham số truyền vào hàm Function Arguments hoặc để xử lý biến cục bộ trong những khoảng thời gian ngắn hạn. Khi cần lưu trữ dữ liệu lâu dài vào CSDL hay biến toàn"
+  },
+  {
+    "url": "rru-vs-antenna.html",
+    "article": "So sánh RRU & Anten Viễn thông",
+    "category": "Telecommunication Systems",
+    "section": "SO SÁNH RRU (REMOTE RADIO UNIT) VÀ ANTEN (ANTENNA) TRONG HẠ TẦNG VIỄN THÔNG",
+    "text": "Trong kiến trúc trạm phát sóng viễn thông BTS eNodeB gNodeB, RRU và Anten đều thuộc phân hệ xử lý và truyền tải tín hiệu vô tuyến RF Radio Frequency. Phân tích chi tiết chức năng, bản chất chủ động và thụ động."
+  },
+  {
+    "url": "rru-vs-antenna.html",
+    "article": "So sánh RRU & Anten Viễn thông",
+    "category": "Telecommunication Systems",
+    "section": "1. Bảng so sánh tổng quan",
+    "text": "So sánh RRU vs Anten: Bản chất thiết bị chủ động Active Device nguồn DC -48V vs thiết bị thụ động Passive Device bức xạ điện từ. Chức năng biến đổi Digital thành RF, khuếch đại PA LNA DAC ADC vs bức xạ sóng điện từ qua môi trường không khí. Cáp quang CPRI eCPRI vs cáp đồng trục RF. Cáp Jumper. RET Remote Electrical Tilt điều khiển góc nghiêng điện tử."
+  },
+  {
+    "url": "rru-vs-antenna.html",
+    "article": "So sánh RRU & Anten Viễn thông",
+    "category": "Telecommunication Systems",
+    "section": "2.1. RRU (Remote Radio Unit - Khối thu phát vô tuyến từ xa)",
+    "text": "RRU trung tâm xử lý tín hiệu vô tuyến trạm phát sóng BTS: Chiều phát Downlink nhận dữ liệu I/Q từ BBU Baseband Unit qua cáp quang CPRI eCPRI chuyển đổi DAC nâng tần RF khuếch đại công suất PA lọc tần số. Chiều thu Uplink nhận tín hiệu RF yếu từ Anten lọc nhiễu khuếch đại tạp âm thấp LNA hạ tần biến đổi ADC gửi về BBU."
+  },
+  {
+    "url": "rru-vs-antenna.html",
+    "article": "So sánh RRU & Anten Viễn thông",
+    "category": "Telecommunication Systems",
+    "section": "2.2. Anten (Antenna)",
+    "text": "Anten cầu nối không gian giữa thiết bị hữu tuyến và môi trường vô tuyến: Chuyển đổi năng lượng điện cao tần thành sóng điện từ lan truyền trong không khí. Tập trung và định hình năng lượng Beam Shaping độ lợi Gain dBi góc phủ ngang Azimuth góc nghiêng dọc Elevation Tilt RET."
+  },
+  {
+    "url": "rru-vs-antenna.html",
+    "article": "So sánh RRU & Anten Viễn thông",
+    "category": "Telecommunication Systems",
+    "section": "3. Mối quan hệ và Xu hướng phát triển công nghệ (2G/3G/4G vs 5G AAU)",
+    "text": "Trạm 2G 3G 4G kiến trúc phân tán Distributed BTS RRU và Anten tách rời nối bằng cáp Jumper RF suy hao. Trạm 5G NR tích hợp AAU Active Antenna Unit gom RRU và Anten thành một khối duy nhất triệt tiêu suy hao cáp hỗ trợ Massive MIMO 32T32R 64T64R định hình búp sóng 3D Beamforming tiết kiệm tải trọng cột tháp."
   }
 ];

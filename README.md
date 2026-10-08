@@ -39,6 +39,7 @@ Toàn bộ tài liệu được đóng gói thành một trang web tài liệu t
 | 3 | **Giao thức Đồng bộ Cache Đa nhân MESI**<br>*(Modified, Exclusive, Shared, Invalid, Bus Snooping)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/mesi-protocol.html) | [`MESI_Cache_Coherence_Protocol.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/MESI_Cache_Coherence_Protocol.md) |
 | 4 | **Tối ưu Đồng bộ: Phân tích SpinLock vs OS Mutex**<br>*(Futex, Context Switch overhead, Atomic CAS, Trade-offs)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/spinlock-vs-mutex.html) | [`SpinLock_TradeOff.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/SpinLock_TradeOff.md) |
 | 5 | **Quản lý Bộ nhớ Hiện đại: std::string vs std::string_view**<br>*(Zero-copy, SSO, Pointer + Length, Dangling reference)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/string-vs-string-view.html) | [`string_vs_string_view.md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/string_vs_string_view.md) |
+| 6 | **So sánh RRU & Anten trong Hạ tầng Viễn thông**<br>*(Active vs Passive, Downlink/Uplink RF, RET, 4G Distributed BTS vs 5G AAU Massive MIMO)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/rru-vs-antenna.html) | [`Telecommunication/RRU vs. Antenna...md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/Telecommunication/RRU%20vs.%20Antenna%20Key%20Differences%20and%20Technical%20Overview.md) |
 
 ---
 
