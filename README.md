@@ -43,7 +43,7 @@ Toàn bộ tài liệu được đóng gói thành một trang web tài liệu t
 | 7 | **Hệ thống Nguồn DC -48V, Pin Lithium & Tủ Rack BTS** 🔒<br>*(Nguồn âm -48V, Rectifier POSTEF, Pin Lithium LiFePO4, Dây BMS RS485, Tiếp địa PE)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/bts-power-system.html) | [`Telecommunication/BTS Power System...md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/Telecommunication/BTS%20Power%20System,%20Lithium%20Battery%20&%20Telecom%20Rack%20Overview.md) |
 | 8 | **Hệ thống Mạng Truyền dẫn Quảng Ninh & Bảo vệ Chuyển mạch** 🔒<br>*(IPBB, DWDM, Core Hạ Long, Ring AGG 1-4, Access C1-C21, MSP/SNCP <50ms, LACP)* | [🌐 Mở bản Web](https://doantrunghuy.github.io/second-brain/mang-truyen-dan-quang-ninh.html) | [`Telecommunication/Quang Ninh Transmission...md`](https://github.com/DoanTrungHuy/second-brain/blob/gh-pages/Telecommunication/Quang%20Ninh%20Transmission%20Network%20&%20Protection%20Overview.md) |
 
-> 🔒 **Lưu ý bảo mật**: Tất cả tài liệu thuộc phân hệ **Telecommunication Systems** (mục 6, 7, 8) được bảo vệ bằng lớp khóa xác thực nội bộ. Mật khẩu mở khóa: **`MBFONE0510`**.
+> 🔒 **Lưu ý bảo mật**: Tất cả tài liệu thuộc phân hệ **Telecommunication Systems** (mục 6, 7, 8) được bảo vệ bằng chuẩn mã hóa **AES-256-GCM**. Vui lòng nhập mật khẩu nội bộ được cấp để giải mã và xem tài liệu trực tiếp trên trình duyệt.
 
 ---
 

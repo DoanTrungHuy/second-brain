@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     // ==========================================================================
-    // 3. GLOBAL ARTICLES REGISTRY & TELECOM SECURITY GATE (MBFONE0510)
+    // 3. GLOBAL ARTICLES REGISTRY & TELECOM SECURITY GATE (AES-256 ENCRYPTED)
     // ==========================================================================
     const articlesList = [
         { url: "index.html", title: "Cấu trúc Cache, Virtual Memory & Malloc" },
@@ -171,8 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { url: "mang-truyen-dan-quang-ninh.html", title: "Mạng Truyền dẫn Quảng Ninh", protected: true }
     ];
 
-    const TELECOM_PASSWORD = 'MBFONE0510';
-    const TELECOM_STORAGE_KEY = 'telecom_auth_token';
+    const TELECOM_STORAGE_KEY = 'telecom_auth_key';
     const TELECOM_PROTECTED_URLS = [
         'rru-vs-antenna.html',
         'bts-power-system.html',
@@ -185,12 +184,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return TELECOM_PROTECTED_URLS.includes(clean);
     };
 
-    const isTelecomUnlocked = () => {
+    const getStoredTelecomKey = () => {
         try {
-            return sessionStorage.getItem(TELECOM_STORAGE_KEY) === TELECOM_PASSWORD;
+            return sessionStorage.getItem(TELECOM_STORAGE_KEY) || window._telecomAuthKeyMem || null;
         } catch (e) {
-            return window._telecomUnlockedMem === TELECOM_PASSWORD;
+            return window._telecomAuthKeyMem || null;
         }
+    };
+
+    const isTelecomUnlocked = () => {
+        return Boolean(getStoredTelecomKey());
     };
 
     const updateSidebarLockBadges = () => {
@@ -206,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 badge.classList.toggle('unlocked', unlocked);
                 badge.classList.toggle('locked', !unlocked);
-                badge.title = unlocked ? 'Đã mở khóa bảo mật' : 'Yêu cầu mật khẩu Telecom';
+                badge.title = unlocked ? 'Đã mở khóa bảo mật (AES-256)' : 'Yêu cầu mật khẩu Telecom (AES-256)';
                 badge.innerHTML = unlocked
                     ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>'
                     : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
@@ -214,19 +217,92 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const setTelecomUnlocked = (unlocked) => {
+    const setTelecomKey = (key) => {
         try {
-            if (unlocked) {
-                sessionStorage.setItem(TELECOM_STORAGE_KEY, TELECOM_PASSWORD);
+            if (key) {
+                sessionStorage.setItem(TELECOM_STORAGE_KEY, key);
             } else {
                 sessionStorage.removeItem(TELECOM_STORAGE_KEY);
+                TELECOM_PROTECTED_URLS.forEach(u => {
+                    sessionStorage.removeItem('telecom_dec_' + u);
+                });
             }
         } catch (e) {}
-        window._telecomUnlockedMem = unlocked ? TELECOM_PASSWORD : null;
+        window._telecomAuthKeyMem = key || null;
         updateSidebarLockBadges();
     };
 
     updateSidebarLockBadges();
+
+    // ==========================================================================
+    // AES-256-GCM WEBCRYPTO DECRYPTION ENGINE (ZERO HARDCODED PASSWORDS)
+    // ==========================================================================
+    const decryptTelecomDoc = async (payload, inputPassword) => {
+        if (!payload || !payload.salt || !payload.iv || !payload.data) {
+            throw new Error('Dữ liệu mã hóa không hợp lệ');
+        }
+        if (!crypto || !crypto.subtle) {
+            throw new Error('Trình duyệt không hỗ trợ Web Crypto API');
+        }
+
+        const enc = new TextEncoder();
+        const hexToBytes = (hex) => {
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < bytes.length; i++) {
+                bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+            }
+            return bytes;
+        };
+
+        const b64ToBytes = (b64) => {
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes;
+        };
+
+        const salt = hexToBytes(payload.salt);
+        const iv = hexToBytes(payload.iv);
+        const ciphertext = b64ToBytes(payload.data);
+
+        // Accept as-is or UPPERCASE
+        const raw = (inputPassword || '').trim();
+        const candidates = [raw.toUpperCase(), raw];
+
+        for (const candidate of candidates) {
+            try {
+                const keyMaterial = await crypto.subtle.importKey(
+                    "raw",
+                    enc.encode(candidate),
+                    "PBKDF2",
+                    false,
+                    ["deriveKey"]
+                );
+                const key = await crypto.subtle.deriveKey(
+                    {
+                        name: "PBKDF2",
+                        salt: salt,
+                        iterations: 100000,
+                        hash: "SHA-256"
+                    },
+                    keyMaterial,
+                    { name: "AES-GCM", length: 256 },
+                    false,
+                    ["decrypt"]
+                );
+                const decryptedBuffer = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    ciphertext
+                );
+                const decryptedText = new TextDecoder('utf-8').decode(decryptedBuffer);
+                return { decryptedText, keyUsed: candidate };
+            } catch (err) {
+                // Decryption error (Auth tag mismatch = wrong key)
+            }
+        }
+        throw new Error('Mật khẩu không chính xác');
+    };
 
     // Telecom Password Modal Portal
     const telecomModal = document.createElement('div');
@@ -239,13 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <button class="telecom-modal-close" id="telecom-modal-close-btn" title="Đóng (Esc)">✕</button>
             </div>
-            <div class="telecom-modal-badge">MOBIFONE TELECOM SECURITY</div>
+            <div class="telecom-modal-badge">MOBIFONE TELECOM • AES-256 ENCRYPTED</div>
             <h3 class="telecom-modal-title" id="telecom-modal-doc-title">Tài liệu Kỹ thuật Viễn thông</h3>
-            <p class="telecom-modal-desc">Tài liệu thuộc phân hệ <strong>Telecommunication Systems</strong> lưu trữ sơ đồ hạ tầng nội bộ. Vui lòng nhập mật khẩu để mở khóa truy cập.</p>
+            <p class="telecom-modal-desc">Tài liệu được bảo vệ bằng mã hóa <strong>AES-256-GCM</strong>. Mật khẩu của bạn là chìa khóa giải mã nội dung trực tiếp trên trình duyệt.</p>
             <form id="telecom-modal-form" class="telecom-auth-form" autocomplete="off">
                 <div class="telecom-input-wrapper">
                     <svg class="telecom-key-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    <input type="password" id="telecom-modal-input" class="telecom-pass-input" placeholder="Nhập mật khẩu bảo mật..." autocomplete="off" spellcheck="false" required>
+                    <input type="password" id="telecom-modal-input" class="telecom-pass-input" placeholder="Nhập mật khẩu giải mã tài liệu..." autocomplete="off" spellcheck="false" required>
                     <button type="button" class="telecom-eye-btn" id="telecom-modal-eye" title="Hiện/Ẩn mật khẩu">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     </button>
@@ -253,9 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="telecom-auth-error" id="telecom-modal-error"></div>
                 <div class="telecom-modal-actions">
                     <button type="button" class="telecom-cancel-btn" id="telecom-modal-cancel">Hủy</button>
-                    <button type="submit" class="telecom-submit-btn">
+                    <button type="submit" class="telecom-submit-btn" id="telecom-modal-submit">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
-                        <span>Mở khóa Tài liệu</span>
+                        <span>Giải mã &amp; Mở khóa</span>
                     </button>
                 </div>
             </form>
@@ -264,21 +340,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(telecomModal);
 
     let pendingTelecomCallback = null;
+    let pendingTelecomPayload = null;
+    let pendingTelecomPath = null;
     const telecomModalInput = telecomModal.querySelector('#telecom-modal-input');
     const telecomModalError = telecomModal.querySelector('#telecom-modal-error');
     const telecomModalCard = telecomModal.querySelector('.telecom-modal-card');
     const telecomModalDocTitle = telecomModal.querySelector('#telecom-modal-doc-title');
     const telecomModalEye = telecomModal.querySelector('#telecom-modal-eye');
+    const telecomModalSubmitBtn = telecomModal.querySelector('#telecom-modal-submit');
 
     const closeTelecomModal = () => {
         telecomModal.classList.remove('show');
         telecomModalInput.value = '';
         telecomModalError.textContent = '';
         pendingTelecomCallback = null;
+        pendingTelecomPayload = null;
+        pendingTelecomPath = null;
     };
 
-    const promptTelecomPassword = (onSuccess, docTitle = 'Tài liệu Kỹ thuật Viễn thông') => {
+    const promptTelecomPassword = (onSuccess, docTitle = 'Tài liệu Kỹ thuật Viễn thông', payload = null, cleanUrl = null) => {
         pendingTelecomCallback = onSuccess;
+        pendingTelecomPayload = payload;
+        pendingTelecomPath = cleanUrl;
         if (telecomModalDocTitle) telecomModalDocTitle.textContent = docTitle;
         telecomModalInput.value = '';
         telecomModalInput.type = 'password';
@@ -301,21 +384,56 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    telecomModal.querySelector('#telecom-modal-form').onsubmit = (e) => {
+    telecomModal.querySelector('#telecom-modal-form').onsubmit = async (e) => {
         e.preventDefault();
         const val = telecomModalInput.value.trim();
-        if (val === TELECOM_PASSWORD || val.toUpperCase() === TELECOM_PASSWORD) {
+        if (!val) return;
+
+        telecomModalSubmitBtn.disabled = true;
+        telecomModalSubmitBtn.innerHTML = '<span>Đang giải mã AES-256...</span>';
+
+        try {
+            // Find target payload
+            let payload = pendingTelecomPayload;
+            if (!payload && typeof encryptedDoc !== 'undefined') {
+                payload = encryptedDoc;
+            }
+            if (!payload && pendingTelecomPath) {
+                // Fetch target page to get its payload
+                let html = pageCache.get(pendingTelecomPath);
+                if (!html) {
+                    const resp = await fetch(pendingTelecomPath);
+                    if (resp.ok) {
+                        html = await resp.text();
+                        pageCache.set(pendingTelecomPath, html);
+                    }
+                }
+                const mEnc = html && html.match(/const encryptedDoc = (\{[\s\S]*?\});/);
+                if (mEnc) payload = JSON.parse(mEnc[1]);
+            }
+
+            if (!payload) {
+                throw new Error('Không tìm thấy dữ liệu mã hóa');
+            }
+
+            const { decryptedText, keyUsed } = await decryptTelecomDoc(payload, val);
+            setTelecomKey(keyUsed);
+            if (pendingTelecomPath) {
+                sessionStorage.setItem('telecom_dec_' + pendingTelecomPath, decryptedText);
+            }
             const cb = pendingTelecomCallback;
-            setTelecomUnlocked(true);
             closeTelecomModal();
-            showToast('🔓 Xác thực thành công! Đã mở khóa tài liệu Viễn thông MobiFone.');
-            if (typeof cb === 'function') cb();
-        } else {
-            telecomModalError.textContent = '⚠ Mật khẩu không chính xác! Vui lòng nhập đúng mật khẩu bảo mật.';
+            showToast('🔓 Giải mã AES-256 thành công! Đã mở khóa tài liệu.');
+            if (typeof cb === 'function') cb(decryptedText);
+        } catch (err) {
+            telecomModalError.textContent = '⚠ Mật khẩu không chính xác! Không thể giải mã tài liệu.';
             telecomModalCard.classList.remove('shake-error');
             void telecomModalCard.offsetWidth;
             telecomModalCard.classList.add('shake-error');
             telecomModalInput.select();
+        } finally {
+            telecomModalSubmitBtn.disabled = false;
+            telecomModalSubmitBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg><span>Giải mã &amp; Mở khóa</span>';
         }
     };
 
@@ -459,95 +577,132 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // 4. ARTICLE RENDERER & INTERACTIVE ENHANCER
     // ==========================================================================
-    const renderArticle = (markdownText, targetPath = null) => {
+    const renderArticle = async (markdownText, targetPath = null, docPayload = null) => {
         const mdBody = document.getElementById('markdown-body');
-        if (!mdBody || !markdownText || typeof marked === 'undefined') return;
+        if (!mdBody) return;
 
         const currentPath = targetPath || window.location.pathname.split('/').pop() || 'index.html';
         window._currentRawMarkdown = markdownText;
         window._currentArticlePath = currentPath;
         updateSidebarLockBadges();
 
-        // Security Gate Check for Protected Telecom Articles
-        if (isTelecomPage(currentPath) && !isTelecomUnlocked()) {
-            const existingRightSidebar = document.getElementById('right-sidebar');
-            if (existingRightSidebar) existingRightSidebar.remove();
-            const existingTopbar = document.querySelector('.sticky-topbar');
-            if (existingTopbar) existingTopbar.remove();
-            const existingPostNav = document.querySelector('.post-navigation');
-            if (existingPostNav) existingPostNav.remove();
+        // Security Gate & AES-256 Decryption Check for Telecom Articles
+        if (isTelecomPage(currentPath)) {
+            let cached = null;
+            try { cached = sessionStorage.getItem('telecom_dec_' + currentPath); } catch (e) {}
+            if (!markdownText && cached) {
+                markdownText = cached;
+            }
 
-            const artInfo = articlesList.find(a => a.url === currentPath);
-            const docTitle = artInfo ? artInfo.title : 'Tài liệu Kỹ thuật Viễn thông';
+            const payload = docPayload || (typeof encryptedDoc !== 'undefined' ? encryptedDoc : null);
+            const storedKey = getStoredTelecomKey();
+            if (!markdownText && payload && storedKey) {
+                try {
+                    const { decryptedText } = await decryptTelecomDoc(payload, storedKey);
+                    markdownText = decryptedText;
+                    sessionStorage.setItem('telecom_dec_' + currentPath, decryptedText);
+                } catch (e) {
+                    setTelecomKey(null);
+                }
+            }
 
-            mdBody.innerHTML = `
-                <div class="telecom-inline-gate">
-                    <div class="telecom-gate-card">
-                        <div class="telecom-shield-icon large">
-                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><path d="M10 11V9a2 2 0 1 1 4 0v2"></path></svg>
-                        </div>
-                        <div class="telecom-modal-badge">MOBIFONE TELECOM SECURITY GATE</div>
-                        <h1 class="telecom-gate-title">${docTitle}</h1>
-                        <p class="telecom-gate-desc">
-                            Tài liệu kỹ thuật thuộc danh mục <strong>Telecommunication Systems</strong> chứa sơ đồ mạng lưới và hạ tầng trạm viễn thông nội bộ. Vui lòng nhập mật khẩu bảo mật để xem nội dung chi tiết.
-                        </p>
-                        <form id="inline-telecom-form" class="telecom-auth-form inline-form" autocomplete="off">
-                            <div class="telecom-input-wrapper">
-                                <svg class="telecom-key-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                <input type="password" id="inline-telecom-input" class="telecom-pass-input" placeholder="Nhập mật khẩu bảo mật Telecom..." autocomplete="off" spellcheck="false" required>
-                                <button type="button" class="telecom-eye-btn" id="inline-telecom-eye" title="Hiện/Ẩn mật khẩu">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </button>
+            if (!markdownText) {
+                const existingRightSidebar = document.getElementById('right-sidebar');
+                if (existingRightSidebar) existingRightSidebar.remove();
+                const existingTopbar = document.querySelector('.sticky-topbar');
+                if (existingTopbar) existingTopbar.remove();
+                const existingPostNav = document.querySelector('.post-navigation');
+                if (existingPostNav) existingPostNav.remove();
+
+                const artInfo = articlesList.find(a => a.url === currentPath);
+                const docTitle = artInfo ? artInfo.title : 'Tài liệu Kỹ thuật Viễn thông';
+
+                mdBody.innerHTML = `
+                    <div class="telecom-inline-gate">
+                        <div class="telecom-gate-card">
+                            <div class="telecom-shield-icon large">
+                                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><path d="M10 11V9a2 2 0 1 1 4 0v2"></path></svg>
                             </div>
-                            <div class="telecom-auth-error" id="inline-telecom-error"></div>
-                            <button type="submit" class="telecom-submit-btn full-width">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
-                                <span>Xác thực & Mở khóa Tài liệu</span>
-                            </button>
-                        </form>
-                        <div class="telecom-gate-footer">
-                            <span>🔒 Bảo vệ toàn bộ các bài viết trong mục <strong>Telecommunication Systems</strong></span>
+                            <div class="telecom-modal-badge">MOBIFONE TELECOM • AES-256 ENCRYPTED</div>
+                            <h1 class="telecom-gate-title">${docTitle}</h1>
+                            <p class="telecom-gate-desc">
+                                Tài liệu kỹ thuật viễn thông được bảo vệ bằng mã hóa <strong>AES-256-GCM</strong>. Mật khẩu của bạn là chìa khóa giải mã nội dung trực tiếp trên trình duyệt.
+                            </p>
+                            <form id="inline-telecom-form" class="telecom-auth-form inline-form" autocomplete="off">
+                                <div class="telecom-input-wrapper">
+                                    <svg class="telecom-key-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    <input type="password" id="inline-telecom-input" class="telecom-pass-input" placeholder="Nhập mật khẩu giải mã tài liệu..." autocomplete="off" spellcheck="false" required>
+                                    <button type="button" class="telecom-eye-btn" id="inline-telecom-eye" title="Hiện/Ẩn mật khẩu">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </button>
+                                </div>
+                                <div class="telecom-auth-error" id="inline-telecom-error"></div>
+                                <button type="submit" class="telecom-submit-btn full-width" id="inline-telecom-submit">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                                    <span>Giải mã &amp; Mở khóa Tài liệu</span>
+                                </button>
+                            </form>
+                            <div class="telecom-gate-footer">
+                                <span>🔒 Toàn bộ dữ liệu được bảo vệ mã hóa chuẩn AES-256 phía client</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            const inlineForm = mdBody.querySelector('#inline-telecom-form');
-            const inlineInput = mdBody.querySelector('#inline-telecom-input');
-            const inlineError = mdBody.querySelector('#inline-telecom-error');
-            const inlineCard = mdBody.querySelector('.telecom-gate-card');
-            const inlineEye = mdBody.querySelector('#inline-telecom-eye');
+                const inlineForm = mdBody.querySelector('#inline-telecom-form');
+                const inlineInput = mdBody.querySelector('#inline-telecom-input');
+                const inlineError = mdBody.querySelector('#inline-telecom-error');
+                const inlineCard = mdBody.querySelector('.telecom-gate-card');
+                const inlineEye = mdBody.querySelector('#inline-telecom-eye');
+                const inlineSubmitBtn = mdBody.querySelector('#inline-telecom-submit');
 
-            setTimeout(() => inlineInput && inlineInput.focus(), 60);
+                setTimeout(() => inlineInput && inlineInput.focus(), 60);
 
-            if (inlineEye && inlineInput) {
-                inlineEye.onclick = () => {
-                    inlineInput.type = inlineInput.type === 'password' ? 'text' : 'password';
-                    inlineInput.focus();
-                };
+                if (inlineEye && inlineInput) {
+                    inlineEye.onclick = () => {
+                        inlineInput.type = inlineInput.type === 'password' ? 'text' : 'password';
+                        inlineInput.focus();
+                    };
+                }
+
+                if (inlineForm) {
+                    inlineForm.onsubmit = async (e) => {
+                        e.preventDefault();
+                        const val = inlineInput.value.trim();
+                        if (!val) return;
+
+                        inlineSubmitBtn.disabled = true;
+                        inlineSubmitBtn.innerHTML = '<span>Đang giải mã AES-256...</span>';
+
+                        try {
+                            const targetPayload = payload || (typeof encryptedDoc !== 'undefined' ? encryptedDoc : null);
+                            if (!targetPayload) {
+                                throw new Error('Không tìm thấy dữ liệu mã hóa');
+                            }
+                            const { decryptedText, keyUsed } = await decryptTelecomDoc(targetPayload, val);
+                            setTelecomKey(keyUsed);
+                            sessionStorage.setItem('telecom_dec_' + currentPath, decryptedText);
+                            showToast('🔓 Giải mã AES-256 thành công! Đã mở khóa tài liệu.');
+                            renderArticle(decryptedText, currentPath);
+                        } catch (err) {
+                            inlineError.textContent = '⚠ Mật khẩu không chính xác! Không thể giải mã dữ liệu.';
+                            inlineCard.classList.remove('shake-error');
+                            void inlineCard.offsetWidth;
+                            inlineCard.classList.add('shake-error');
+                            inlineInput.select();
+                        } finally {
+                            inlineSubmitBtn.disabled = false;
+                            inlineSubmitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg><span>Giải mã &amp; Mở khóa Tài liệu</span>';
+                        }
+                    };
+                }
+                return;
             }
-
-            if (inlineForm) {
-                inlineForm.onsubmit = (e) => {
-                    e.preventDefault();
-                    const val = inlineInput.value.trim();
-                    if (val === TELECOM_PASSWORD || val.toUpperCase() === TELECOM_PASSWORD) {
-                        setTelecomUnlocked(true);
-                        showToast('🔓 Xác thực thành công! Đã mở khóa tài liệu Viễn thông MobiFone.');
-                        renderArticle(markdownText, currentPath);
-                    } else {
-                        inlineError.textContent = '⚠ Mật khẩu không chính xác! Vui lòng kiểm tra lại.';
-                        inlineCard.classList.remove('shake-error');
-                        void inlineCard.offsetWidth;
-                        inlineCard.classList.add('shake-error');
-                        inlineInput.select();
-                    }
-                };
-            }
-            return;
         }
 
-        const renderer = new marked.Renderer();
+        if (!markdownText) return;
+
+                const renderer = new marked.Renderer();
         const originalCode = renderer.code;
         renderer.code = function(code, language, isEscaped) {
             const rendered = originalCode.call(this, code, language, isEscaped);
@@ -752,9 +907,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const lockBtn = metaBar.querySelector('.lock-telecom-btn');
         if (lockBtn) {
             lockBtn.onclick = () => {
-                setTelecomUnlocked(false);
+                setTelecomKey(null);
                 showToast('🔒 Đã khóa bảo mật phân hệ Viễn thông!');
-                renderArticle(markdownText, currentPath);
+                renderArticle(null, currentPath);
             };
         }
 
@@ -1091,15 +1246,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const hash = url.includes('#') ? url.split('#')[1] : null;
         const currentClean = window.location.pathname.split('/').pop() || 'index.html';
 
-        if (isTelecomPage(cleanUrl) && !isTelecomUnlocked()) {
-            const docObj = articlesList.find(a => a.url === cleanUrl);
-            const docTitle = docObj ? docObj.title : 'Tài liệu Kỹ thuật Viễn thông';
-            promptTelecomPassword(() => {
-                navigateSmoothly(url, push);
-            }, docTitle);
-            return;
-        }
-
         if (cleanUrl === currentClean || cleanUrl === '') {
             if (hash) {
                 const el = document.getElementById(hash);
@@ -1133,22 +1279,44 @@ document.addEventListener('DOMContentLoaded', () => {
             const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
             const newTitle = titleMatch ? titleMatch[1] : document.title;
 
-            const startMarker = 'const rawMarkdown = `';
-            const mdStart = html.indexOf(startMarker);
-            let newRawMarkdown = '';
-            if (mdStart !== -1) {
-                const contentStart = mdStart + startMarker.length;
-                const rendererIdx = html.indexOf('const renderer = new marked.Renderer()', contentStart);
-                const mdEnd = rendererIdx !== -1 ? html.lastIndexOf('`;', rendererIdx) : html.lastIndexOf('`;');
-                if (mdEnd !== -1 && mdEnd > contentStart) {
-                    newRawMarkdown = html.slice(contentStart, mdEnd);
-                } else {
-                    const mdMatch = html.match(/const rawMarkdown = `([\s\S]*?)`;/);
-                    newRawMarkdown = mdMatch ? mdMatch[1] : '';
-                }
+            let targetPayload = null;
+            const mEnc = html.match(/const encryptedDoc = (\{[\s\S]*?\});/);
+            if (mEnc) {
+                try { targetPayload = JSON.parse(mEnc[1]); } catch(e) {}
             }
-            if (newRawMarkdown) {
-                newRawMarkdown = newRawMarkdown.replace(/\\`/g, '`');
+
+            let newRawMarkdown = '';
+            if (isTelecomPage(cleanUrl)) {
+                let cached = null;
+                try { cached = sessionStorage.getItem('telecom_dec_' + cleanUrl); } catch(e) {}
+                if (cached) {
+                    newRawMarkdown = cached;
+                } else if (targetPayload && getStoredTelecomKey()) {
+                    try {
+                        const { decryptedText } = await decryptTelecomDoc(targetPayload, getStoredTelecomKey());
+                        newRawMarkdown = decryptedText;
+                        sessionStorage.setItem('telecom_dec_' + cleanUrl, decryptedText);
+                    } catch (e) {
+                        setTelecomKey(null);
+                    }
+                }
+            } else {
+                const startMarker = 'const rawMarkdown = `';
+                const mdStart = html.indexOf(startMarker);
+                if (mdStart !== -1) {
+                    const contentStart = mdStart + startMarker.length;
+                    const rendererIdx = html.indexOf('const renderer = new marked.Renderer()', contentStart);
+                    const mdEnd = rendererIdx !== -1 ? html.lastIndexOf('`;', rendererIdx) : html.lastIndexOf('`;');
+                    if (mdEnd !== -1 && mdEnd > contentStart) {
+                        newRawMarkdown = html.slice(contentStart, mdEnd);
+                    } else {
+                        const mdMatch = html.match(/const rawMarkdown = `([\s\S]*?)`;/);
+                        newRawMarkdown = mdMatch ? mdMatch[1] : '';
+                    }
+                }
+                if (newRawMarkdown) {
+                    newRawMarkdown = newRawMarkdown.replace(/\\`/g, '`');
+                }
             }
 
             const articleContainer = document.querySelector('.article-container');
@@ -1156,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const applyPageUpdate = () => {
                 document.title = newTitle;
                 window.rawMarkdown = newRawMarkdown;
-                renderArticle(newRawMarkdown, cleanUrl);
+                renderArticle(newRawMarkdown, cleanUrl, targetPayload);
                 updateActiveSidebar(cleanUrl);
 
                 if (hash) {
@@ -1206,6 +1374,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render of article content
     if (typeof rawMarkdown !== 'undefined') {
         renderArticle(rawMarkdown);
+    } else if (typeof encryptedDoc !== 'undefined') {
+        renderArticle(null, null, encryptedDoc);
     }
 
     // Intercept sidebar links for seamless transition
