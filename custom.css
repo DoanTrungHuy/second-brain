@@ -20,7 +20,7 @@ html.theme-switching *::after {
     transition: none !important;
 }
 
-/* View Transition API - Custom circular reveal animation */
+/* View Transition API - Custom circular reveal animation & smooth SPA page transition */
 ::view-transition-old(root),
 ::view-transition-new(root) {
     animation: none;
@@ -31,6 +31,38 @@ html.theme-switching *::after {
 }
 ::view-transition-new(root) {
     z-index: 9999;
+}
+
+/* Smooth GPU-Accelerated View Transitions during SPA page navigation */
+html.spa-navigating::view-transition-old(root) {
+    animation: 220ms cubic-bezier(0.16, 1, 0.3, 1) both spaPageExit !important;
+    z-index: 1;
+}
+html.spa-navigating::view-transition-new(root) {
+    animation: 320ms cubic-bezier(0.16, 1, 0.3, 1) both spaPageEnter !important;
+    z-index: 2;
+}
+
+@keyframes spaPageExit {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.992);
+    }
+}
+
+@keyframes spaPageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.992);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* ==========================================================================
@@ -3487,6 +3519,168 @@ html.spa-navigating #right-sidebar {
 #markdown-body img.lightbox-clickable:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* ==========================================================================
+   13. MOBILE RESPONSIVE ENHANCEMENTS & TOUCH OPTIMIZATIONS
+   ========================================================================== */
+
+/* Touch feedback ripple & active states */
+button:active, 
+.nav-item:active, 
+.post-nav-card:active {
+    transform: scale(0.975);
+    transition: transform 0.1s ease;
+}
+
+/* Responsive SVG Diagram Wrapper */
+.svg-diagram-wrapper {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 16px;
+    background: #0b132b;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+    margin: 24px 0;
+    padding: 18px;
+}
+.svg-diagram-wrapper svg {
+    min-width: 720px;
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Unlocking Card Transition */
+.telecom-gate-card.unlocking {
+    transform: scale(0.95);
+    opacity: 0;
+    filter: blur(8px);
+    transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 768px) {
+    /* Hide keyboard shortcut helper button on touch devices */
+    #kbd-shortcuts-btn {
+        display: none !important;
+    }
+
+    /* Floating Back to Top on Mobile */
+    #back-to-top {
+        bottom: 22px !important;
+        right: 16px !important;
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    /* Responsive SVG diagram viewer with swipe guidance */
+    .svg-diagram-wrapper {
+        margin: 18px -10px !important;
+        border-radius: 12px !important;
+        padding: 14px 10px !important;
+    }
+    .svg-diagram-wrapper::before {
+        content: '👉 Vuốt ngang để xem toàn cảnh sơ đồ';
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin-bottom: 10px;
+        text-align: center;
+        letter-spacing: 0.3px;
+    }
+    .svg-diagram-wrapper svg {
+        min-width: 640px !important;
+    }
+
+    /* Meta bar on Mobile */
+    .article-meta-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+    .meta-actions {
+        width: 100% !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+    .meta-actions .meta-btn {
+        flex: 1 !important;
+        justify-content: center !important;
+        padding: 8px 12px !important;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Telecom Inline Security Gate on Mobile Phones */
+    .telecom-inline-gate {
+        padding: 24px 12px !important;
+        min-height: calc(100vh - 140px) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .telecom-gate-card {
+        padding: 28px 18px 22px !important;
+        border-radius: 18px !important;
+        max-width: 100% !important;
+        box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.35) !important;
+    }
+    .telecom-shield-icon.large {
+        width: 58px !important;
+        height: 58px !important;
+        border-radius: 16px !important;
+        margin-bottom: 14px !important;
+    }
+    .telecom-shield-icon.large svg {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .telecom-modal-badge {
+        font-size: 0.65rem !important;
+        padding: 3px 8px !important;
+        margin-bottom: 8px !important;
+    }
+    .telecom-gate-title {
+        font-size: 1.35rem !important;
+        margin-bottom: 10px !important;
+        line-height: 1.32 !important;
+    }
+    .telecom-gate-desc {
+        font-size: 0.85rem !important;
+        line-height: 1.55 !important;
+        margin-bottom: 18px !important;
+    }
+    .telecom-pass-input {
+        font-size: 16px !important; /* 16px prevents iOS Safari auto-zoom */
+        padding: 13px 40px 13px 38px !important;
+        border-radius: 12px !important;
+    }
+    .telecom-submit-btn.full-width {
+        padding: 13px 18px !important;
+        font-size: 0.95rem !important;
+        border-radius: 12px !important;
+        min-height: 48px !important;
+    }
+    .telecom-gate-footer {
+        margin-top: 18px !important;
+        padding-top: 12px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Modal Card on Phone */
+    .telecom-modal-card {
+        padding: 24px 18px !important;
+        border-radius: 18px !important;
+    }
+    .telecom-modal-title {
+        font-size: 1.15rem !important;
+    }
 }
 
 

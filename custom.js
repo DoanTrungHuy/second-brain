@@ -682,6 +682,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const { decryptedText, keyUsed } = await decryptTelecomDoc(targetPayload, val);
                             setTelecomKey(keyUsed);
                             sessionStorage.setItem('telecom_dec_' + currentPath, decryptedText);
+                            inlineCard.classList.add('unlocking');
+                            await new Promise(r => setTimeout(r, 220));
                             showToast('🔓 Giải mã AES-256 thành công! Đã mở khóa tài liệu.');
                             renderArticle(decryptedText, currentPath);
                         } catch (err) {
