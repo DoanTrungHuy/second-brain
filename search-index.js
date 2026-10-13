@@ -575,35 +575,35 @@ const windowSearchIndex = [
   },
   {
     "url": "mang-truyen-dan-quang-ninh.html",
-    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "article": "Mạng Truyền dẫn Viễn thông",
     "category": "Telecommunication Systems",
-    "section": "HỆ THỐNG MẠNG TRUYỀN DẪN QUẢNG NINH & CƠ CHẾ BẢO VỆ CHUYỂN MẠCH DỰ PHÒNG",
-    "text": "Toàn cảnh mạng truyền dẫn MobiFone Quảng Ninh: Trục IPBB DWDM kết nối quốc gia, Core Hạ Long, các vòng AGG Ring huyện thị Cẩm Phả Uông Bí Móng Cái, Access C1-C21 và cơ chế bảo vệ MSP SNCP LACP dưới 50ms."
+    "section": "HỆ THỐNG MẠNG TRUYỀN DẪN VIỄN THÔNG & CƠ CHẾ BẢO VỆ CHUYỂN MẠCH DỰ PHÒNG",
+    "text": "Toàn cảnh mạng truyền dẫn Mạng Viễn thông: Trục IPBB DWDM kết nối quốc gia, Core Hạ Long, các vòng AGG Ring huyện thị Cẩm Phả Uông Bí Móng Cái, Access C1-C21 và cơ chế bảo vệ MSP SNCP LACP dưới 50ms."
   },
   {
     "url": "mang-truyen-dan-quang-ninh.html",
-    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "article": "Mạng Truyền dẫn Viễn thông",
     "category": "Telecommunication Systems",
     "section": "1. Kiến trúc Phân tầng Mạng Truyền dẫn (Backbone -> Core -> AGG -> Access)",
-    "text": "Kiến trúc 4 tầng phân cấp truyền dẫn: Tầng Backbone IPBB DWDM truyền tải liên tỉnh Hà Nội Quảng Ninh Hải Phòng dung lượng 100G 400G; Tầng Core Tỉnh Hạ Long 1 Hạ Long 2 định tuyến phân phối lưu lượng; Tầng AGG Gom huyện thị bảo vệ Ring; Tầng Access truy nhập nối trực tiếp các trạm BTS NodeB gNodeB qua luồng FE GE 10GE."
+    "text": "Kiến trúc 4 tầng phân cấp truyền dẫn: Tầng Backbone IPBB DWDM truyền tải liên tỉnh các trung tâm dữ liệu dung lượng 100G 400G; Tầng Core Tỉnh Hạ Long 1 Hạ Long 2 định tuyến phân phối lưu lượng; Tầng AGG Gom huyện thị bảo vệ Ring; Tầng Access truy nhập nối trực tiếp các trạm BTS NodeB gNodeB qua luồng FE GE 10GE."
   },
   {
     "url": "mang-truyen-dan-quang-ninh.html",
-    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "article": "Mạng Truyền dẫn Viễn thông",
     "category": "Telecommunication Systems",
-    "section": "2. Sơ đồ Mạng Truyền dẫn Quảng Ninh 2025",
-    "text": "Chi tiết sơ đồ topo mạng truyền dẫn Quảng Ninh: Phân bố vòng Ring AGG 1 AGG 2 AGG 3 AGG 4 bao phủ Đông Triều Uông Bí Quảng Yên Hạ Long Cẩm Phả Tiên Yên Ba Chẽ Đầm Hà Hải Hà Móng Cái Vân Đồn Cô Tô. Kết cấu Ring khép kín bảo đảm độ tin cậy viễn thông 99.999%."
+    "section": "2. Sơ đồ Mạng Truyền dẫn Viễn thông",
+    "text": "Chi tiết sơ đồ topo mạng truyền dẫn viễn thông diện rộng: Phân bố vòng Ring AGG 1 AGG 2 AGG 3 AGG 4 bao phủ các khu vực huyện thị, phân nhánh trung tâm và hải đảo. Kết cấu Ring khép kín bảo đảm độ tin cậy viễn thông 99.999%."
   },
   {
     "url": "mang-truyen-dan-quang-ninh.html",
-    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "article": "Mạng Truyền dẫn Viễn thông",
     "category": "Telecommunication Systems",
     "section": "3. Cơ chế Bảo vệ & Chuyển mạch Dự phòng (Protection Switching)",
     "text": "Nguyên lý bảo vệ luồng dữ liệu viễn thông: Cơ chế 1+1 Protection phát đồng thời chọn thu tốt hơn; Cơ chế 1:n Protection chia sẻ tài nguyên bảo vệ; Ring Protection MSP SNCP phát hiện đứt sợi quang tự động đảo luồng qua nhánh đối diện trong vòng dưới 50ms không rớt cuộc gọi; LACP Link Aggregation gộp cổng tăng băng thông và dự phòng mức cổng vật lý."
   },
   {
     "url": "mang-truyen-dan-quang-ninh.html",
-    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "article": "Mạng Truyền dẫn Viễn thông",
     "category": "Telecommunication Systems",
     "section": "4. Phân tích Phiếu Giao việc & Quy trình Xử lý Sự cố Truyền dẫn",
     "text": "Quy trình ứng cứu thông tin trạm viễn thông qua phiếu giao việc: Phân tích mã trạm tên luồng cảnh báo LOS Loss of Signal, đo kiểm sợi quang bằng máy đo OTDR xác định điểm đứt gãy cự ly mét, máy đo công suất quang OPM kiểm tra suy hao kết nối ODF nhảy dây patch cord hàn quang dã chiến."

@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { url: "string-vs-string-view.html", title: "Quản lý Bộ nhớ: std::string_view" },
         { url: "rru-vs-antenna.html", title: "So sánh RRU & Anten Viễn thông", protected: true },
         { url: "bts-power-system.html", title: "Nguồn DC -48V & Pin Lithium BTS", protected: true },
-        { url: "mang-truyen-dan-quang-ninh.html", title: "Mạng Truyền dẫn Quảng Ninh", protected: true }
+        { url: "mang-truyen-dan-quang-ninh.html", title: "Mạng Truyền dẫn Viễn thông", protected: true }
     ];
 
     const TELECOM_STORAGE_KEY = 'telecom_auth_key';
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <button class="telecom-modal-close" id="telecom-modal-close-btn" title="Đóng (Esc)">✕</button>
             </div>
-            <div class="telecom-modal-badge">MOBIFONE TELECOM • AES-256 ENCRYPTED</div>
+            <div class="telecom-modal-badge">TELECOM TRANSMISSION • AES-256 ENCRYPTED</div>
             <h3 class="telecom-modal-title" id="telecom-modal-doc-title">Tài liệu Kỹ thuật Viễn thông</h3>
             <p class="telecom-modal-desc">Tài liệu được bảo vệ bằng mã hóa <strong>AES-256-GCM</strong>. Mật khẩu của bạn là chìa khóa giải mã nội dung trực tiếp trên trình duyệt.</p>
             <form id="telecom-modal-form" class="telecom-auth-form" autocomplete="off">
@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="telecom-shield-icon large">
                                 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><path d="M10 11V9a2 2 0 1 1 4 0v2"></path></svg>
                             </div>
-                            <div class="telecom-modal-badge">MOBIFONE TELECOM • AES-256 ENCRYPTED</div>
+                            <div class="telecom-modal-badge">TELECOM TRANSMISSION • AES-256 ENCRYPTED</div>
                             <h1 class="telecom-gate-title">${docTitle}</h1>
                             <p class="telecom-gate-desc">
                                 Tài liệu kỹ thuật viễn thông được bảo vệ bằng mã hóa <strong>AES-256-GCM</strong>. Mật khẩu của bạn là chìa khóa giải mã nội dung trực tiếp trên trình duyệt.
