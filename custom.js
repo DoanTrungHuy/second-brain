@@ -703,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!markdownText) return;
+        markdownText = markdownText.replace(/\\`/g, '`');
 
                 const renderer = new marked.Renderer();
         const originalCode = renderer.code;
