@@ -530,5 +530,82 @@ const windowSearchIndex = [
     "category": "Telecommunication Systems",
     "section": "3. Mối quan hệ và Xu hướng phát triển công nghệ (2G/3G/4G vs 5G AAU)",
     "text": "Trạm 2G 3G 4G kiến trúc phân tán Distributed BTS RRU và Anten tách rời nối bằng cáp Jumper RF suy hao. Trạm 5G NR tích hợp AAU Active Antenna Unit gom RRU và Anten thành một khối duy nhất triệt tiêu suy hao cáp hỗ trợ Massive MIMO 32T32R 64T64R định hình búp sóng 3D Beamforming tiết kiệm tải trọng cột tháp."
+  },
+  {
+    "url": "bts-power-system.html",
+    "article": "Nguồn DC -48V & Pin Lithium BTS",
+    "category": "Telecommunication Systems",
+    "section": "TỔNG QUAN PHẦN CỨNG TRẠM BTS: HỆ THỐNG NGUỒN DC -48V, PIN LITHIUM & RACK THIẾT BỊ",
+    "text": "Tổng quan cấu trúc trạm BTS viễn thông: Tủ nguồn DC -48V Rectifier POSTEF, Pin Lithium LiFePO4, BBU Baseband Unit, ODF quang, hệ thống tiếp địa an toàn PE và phân phối điện AC/DC."
+  },
+  {
+    "url": "bts-power-system.html",
+    "article": "Nguồn DC -48V & Pin Lithium BTS",
+    "category": "Telecommunication Systems",
+    "section": "1. Cấu trúc Tổng thể & Phân tầng Trạm Viễn thông (BTS)",
+    "text": "Phân tầng trạm viễn thông: Tầng vô tuyến BBU xử lý băng gốc, Tầng nguồn DC -48V Rectifier biến đổi AC 220V/380V sang DC -48V nuôi thiết bị, Tầng Pin Lithium lưu điện dự phòng 48V 50Ah 100Ah, Tầng phối quang ODF quản lý sợi quang, Tầng tiếp địa PE tiếp đất chống sét lan truyền."
+  },
+  {
+    "url": "bts-power-system.html",
+    "article": "Nguồn DC -48V & Pin Lithium BTS",
+    "category": "Telecommunication Systems",
+    "section": "2. Tủ Nguồn Viễn thông & Nguyên lý Cấp nguồn DC -48V",
+    "text": "Tại sao viễn thông dùng nguồn âm DC -48V? Chống ăn mòn điện hóa Catot bảo vệ cáp đồng ngầm, an toàn điện cho kỹ thuật viên dưới ngưỡng 60V, tương thích ắc quy chì truyền thống. Rectifier tự động chuyển đổi AC sang DC, nạp nổi Float charge -53.5V, nạp cân bằng Equalize charge và chống phóng sâu LVD."
+  },
+  {
+    "url": "bts-power-system.html",
+    "article": "Nguồn DC -48V & Pin Lithium BTS",
+    "category": "Telecommunication Systems",
+    "section": "3. Hệ thống Pin Lưu điện Lithium (LiFePO4) & Phân tích Đấu nối Dây",
+    "text": "Pin Lithium Iron Phosphate LiFePO4 mật độ năng lượng cao tuổi thọ 3000-5000 chu kỳ: Cực âm -48V cáp màu xanh, cực dương 0V Ground cáp màu đỏ nối thanh cái đồng. Dây truyền thông BMS giao tiếp RS485 RS232 CAN bus báo dung lượng SOC tình trạng SOH nhiệt độ tế bào Cell. Dây PE tiếp địa an toàn."
+  },
+  {
+    "url": "bts-power-system.html",
+    "article": "Nguồn DC -48V & Pin Lithium BTS",
+    "category": "Telecommunication Systems",
+    "section": "4. Bắt lỗi Kỹ thuật Hiện trường: Lỗi Thiếu Tiếp địa PE trên Khối Pin",
+    "text": "Phát hiện lỗi kỹ thuật lắp đặt trạm thực tế: Khối pin số 2 thiếu dây tiếp địa vỏ PE bu lông tiếp địa bị bỏ trống. Nguy cơ rò điện tĩnh điện tích tụ gây hỏng bo mạch BMS và nguy cơ sét đánh lan truyền phá hủy pack pin. Biện pháp khắc phục chuẩn hóa cáp PE bấm đầu cos siết bu lông đệm vênh."
+  },
+  {
+    "url": "bts-power-system.html",
+    "article": "Nguồn DC -48V & Pin Lithium BTS",
+    "category": "Telecommunication Systems",
+    "section": "5. Quy trình Vận hành, Bảo dưỡng & An toàn Trạm BTS",
+    "text": "Quy trình vận hành trạm BTS: Kiểm tra điện áp nạp nổi Float -53.5V đến -54.0V, siết lực bu lông thanh cái đồng busbar bằng cờ lê lực, đo điện trở tiếp địa trạm dưới 4 Ohm hoặc dưới 10 Ohm, kiểm tra cảnh báo Alarm đèn Run đèn SOC trên BMS."
+  },
+  {
+    "url": "mang-truyen-dan-quang-ninh.html",
+    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "category": "Telecommunication Systems",
+    "section": "HỆ THỐNG MẠNG TRUYỀN DẪN QUẢNG NINH & CƠ CHẾ BẢO VỆ CHUYỂN MẠCH DỰ PHÒNG",
+    "text": "Toàn cảnh mạng truyền dẫn MobiFone Quảng Ninh: Trục IPBB DWDM kết nối quốc gia, Core Hạ Long, các vòng AGG Ring huyện thị Cẩm Phả Uông Bí Móng Cái, Access C1-C21 và cơ chế bảo vệ MSP SNCP LACP dưới 50ms."
+  },
+  {
+    "url": "mang-truyen-dan-quang-ninh.html",
+    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "category": "Telecommunication Systems",
+    "section": "1. Kiến trúc Phân tầng Mạng Truyền dẫn (Backbone -> Core -> AGG -> Access)",
+    "text": "Kiến trúc 4 tầng phân cấp truyền dẫn: Tầng Backbone IPBB DWDM truyền tải liên tỉnh Hà Nội Quảng Ninh Hải Phòng dung lượng 100G 400G; Tầng Core Tỉnh Hạ Long 1 Hạ Long 2 định tuyến phân phối lưu lượng; Tầng AGG Gom huyện thị bảo vệ Ring; Tầng Access truy nhập nối trực tiếp các trạm BTS NodeB gNodeB qua luồng FE GE 10GE."
+  },
+  {
+    "url": "mang-truyen-dan-quang-ninh.html",
+    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "category": "Telecommunication Systems",
+    "section": "2. Sơ đồ Mạng Truyền dẫn Quảng Ninh 2025",
+    "text": "Chi tiết sơ đồ topo mạng truyền dẫn Quảng Ninh: Phân bố vòng Ring AGG 1 AGG 2 AGG 3 AGG 4 bao phủ Đông Triều Uông Bí Quảng Yên Hạ Long Cẩm Phả Tiên Yên Ba Chẽ Đầm Hà Hải Hà Móng Cái Vân Đồn Cô Tô. Kết cấu Ring khép kín bảo đảm độ tin cậy viễn thông 99.999%."
+  },
+  {
+    "url": "mang-truyen-dan-quang-ninh.html",
+    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "category": "Telecommunication Systems",
+    "section": "3. Cơ chế Bảo vệ & Chuyển mạch Dự phòng (Protection Switching)",
+    "text": "Nguyên lý bảo vệ luồng dữ liệu viễn thông: Cơ chế 1+1 Protection phát đồng thời chọn thu tốt hơn; Cơ chế 1:n Protection chia sẻ tài nguyên bảo vệ; Ring Protection MSP SNCP phát hiện đứt sợi quang tự động đảo luồng qua nhánh đối diện trong vòng dưới 50ms không rớt cuộc gọi; LACP Link Aggregation gộp cổng tăng băng thông và dự phòng mức cổng vật lý."
+  },
+  {
+    "url": "mang-truyen-dan-quang-ninh.html",
+    "article": "Mạng Truyền dẫn Quảng Ninh",
+    "category": "Telecommunication Systems",
+    "section": "4. Phân tích Phiếu Giao việc & Quy trình Xử lý Sự cố Truyền dẫn",
+    "text": "Quy trình ứng cứu thông tin trạm viễn thông qua phiếu giao việc: Phân tích mã trạm tên luồng cảnh báo LOS Loss of Signal, đo kiểm sợi quang bằng máy đo OTDR xác định điểm đứt gãy cự ly mét, máy đo công suất quang OPM kiểm tra suy hao kết nối ODF nhảy dây patch cord hàn quang dã chiến."
   }
 ];

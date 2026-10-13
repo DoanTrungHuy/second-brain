@@ -3070,6 +3070,425 @@ html.spa-navigating #right-sidebar {
     }
 }
 
+/* ==========================================================================
+   11. TELECOM SECURITY GATE & PASSWORD MODAL (MBFONE0510)
+   ========================================================================== */
+
+/* Sidebar Lock Badge */
+.telecom-lock-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+.telecom-lock-badge.locked {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+}
+.telecom-lock-badge.unlocked {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+}
+
+/* Telecom Password Modal */
+#telecom-auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#telecom-auth-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.telecom-modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    width: 92%;
+    max-width: 480px;
+    padding: 28px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4);
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#telecom-auth-modal.show .telecom-modal-card {
+    transform: scale(1);
+}
+
+.telecom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.telecom-shield-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.telecom-shield-icon.large {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    margin: 0 auto 18px;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.telecom-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: all 0.18s ease;
+}
+.telecom-modal-close:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.telecom-modal-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: rgba(37, 99, 235, 0.1);
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-bottom: 10px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.telecom-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 8px 0;
+}
+
+.telecom-modal-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 20px 0;
+}
+
+.telecom-auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.telecom-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.telecom-key-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.telecom-pass-input {
+    width: 100%;
+    padding: 12px 42px 12px 40px;
+    font-size: 0.95rem;
+    font-family: var(--font-mono);
+    background: var(--bg-body);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.telecom-pass-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.telecom-eye-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    transition: color 0.15s;
+}
+.telecom-eye-btn:hover {
+    color: var(--text-main);
+}
+
+.telecom-auth-error {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 500;
+    min-height: 20px;
+    margin-bottom: 12px;
+}
+
+.telecom-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.telecom-cancel-btn {
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.telecom-cancel-btn:hover {
+    background: rgba(148, 163, 184, 0.1);
+    color: var(--text-main);
+}
+
+.telecom-submit-btn {
+    padding: 9px 20px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--primary);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+.telecom-submit-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+.telecom-submit-btn.full-width {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+}
+
+/* Shake Error Animation */
+@keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+}
+.shake-error {
+    animation: shakeError 0.45s ease-in-out;
+}
+
+/* Inline Security Gate (On direct URL load/refresh) */
+.telecom-inline-gate {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 55vh;
+    padding: 40px 16px;
+}
+
+.telecom-gate-card {
+    max-width: 520px;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.12);
+}
+
+.telecom-gate-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+}
+
+.telecom-gate-desc {
+    font-size: 0.925rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 24px 0;
+}
+
+.telecom-gate-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Lock Button in Meta Actions */
+.lock-telecom-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.lock-telecom-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   12. FULLSCREEN IMAGE & DIAGRAM LIGHTBOX
+   ========================================================================== */
+#image-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.93);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#image-lightbox.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: rgba(15, 23, 42, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.lightbox-caption {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f8fafc;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60%;
+}
+
+.lightbox-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.lightbox-btn {
+    padding: 7px 14px;
+    font-size: 0.825rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.lightbox-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+.lightbox-btn.close {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+.lightbox-btn.close:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.lightbox-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 24px;
+}
+
+#lightbox-img {
+    max-width: 95%;
+    max-height: 86vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    cursor: zoom-in;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#lightbox-img.zoomed {
+    max-width: none;
+    max-height: none;
+    transform: scale(1.6);
+    cursor: zoom-out;
+}
+
+#markdown-body img.lightbox-clickable {
+    cursor: zoom-in;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border-radius: 10px;
+}
+#markdown-body img.lightbox-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
 
 
 

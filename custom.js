@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     // ==========================================================================
-    // 3. GLOBAL ARTICLES REGISTRY & ULTRA-SMOOTH SPA NAVIGATION
+    // 3. GLOBAL ARTICLES REGISTRY & TELECOM SECURITY GATE (MBFONE0510)
     // ==========================================================================
     const articlesList = [
         { url: "index.html", title: "Cấu trúc Cache, Virtual Memory & Malloc" },
@@ -166,8 +166,199 @@ document.addEventListener('DOMContentLoaded', () => {
         { url: "mesi-protocol.html", title: "Giao thức Đồng bộ MESI" },
         { url: "spinlock-vs-mutex.html", title: "Tối ưu Đồng bộ: SpinLock vs Mutex" },
         { url: "string-vs-string-view.html", title: "Quản lý Bộ nhớ: std::string_view" },
-        { url: "rru-vs-antenna.html", title: "So sánh RRU & Anten Viễn thông" }
+        { url: "rru-vs-antenna.html", title: "So sánh RRU & Anten Viễn thông", protected: true },
+        { url: "bts-power-system.html", title: "Nguồn DC -48V & Pin Lithium BTS", protected: true },
+        { url: "mang-truyen-dan-quang-ninh.html", title: "Mạng Truyền dẫn Quảng Ninh", protected: true }
     ];
+
+    const TELECOM_PASSWORD = 'MBFONE0510';
+    const TELECOM_STORAGE_KEY = 'telecom_auth_token';
+    const TELECOM_PROTECTED_URLS = [
+        'rru-vs-antenna.html',
+        'bts-power-system.html',
+        'mang-truyen-dan-quang-ninh.html'
+    ];
+
+    const isTelecomPage = (url) => {
+        if (!url) return false;
+        const clean = url.split('#')[0].split('?')[0].split('/').pop();
+        return TELECOM_PROTECTED_URLS.includes(clean);
+    };
+
+    const isTelecomUnlocked = () => {
+        try {
+            return sessionStorage.getItem(TELECOM_STORAGE_KEY) === TELECOM_PASSWORD;
+        } catch (e) {
+            return window._telecomUnlockedMem === TELECOM_PASSWORD;
+        }
+    };
+
+    const updateSidebarLockBadges = () => {
+        const unlocked = isTelecomUnlocked();
+        document.querySelectorAll('#sidebar .nav-item').forEach(item => {
+            const href = item.getAttribute('href');
+            if (isTelecomPage(href) || item.getAttribute('data-protected') === 'telecom') {
+                let badge = item.querySelector('.telecom-lock-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'telecom-lock-badge';
+                    item.appendChild(badge);
+                }
+                badge.classList.toggle('unlocked', unlocked);
+                badge.classList.toggle('locked', !unlocked);
+                badge.title = unlocked ? 'Đã mở khóa bảo mật' : 'Yêu cầu mật khẩu Telecom';
+                badge.innerHTML = unlocked
+                    ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>'
+                    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+            }
+        });
+    };
+
+    const setTelecomUnlocked = (unlocked) => {
+        try {
+            if (unlocked) {
+                sessionStorage.setItem(TELECOM_STORAGE_KEY, TELECOM_PASSWORD);
+            } else {
+                sessionStorage.removeItem(TELECOM_STORAGE_KEY);
+            }
+        } catch (e) {}
+        window._telecomUnlockedMem = unlocked ? TELECOM_PASSWORD : null;
+        updateSidebarLockBadges();
+    };
+
+    updateSidebarLockBadges();
+
+    // Telecom Password Modal Portal
+    const telecomModal = document.createElement('div');
+    telecomModal.id = 'telecom-auth-modal';
+    telecomModal.innerHTML = `
+        <div class="telecom-modal-card">
+            <div class="telecom-modal-header">
+                <div class="telecom-shield-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><path d="M10 11V9a2 2 0 1 1 4 0v2"></path></svg>
+                </div>
+                <button class="telecom-modal-close" id="telecom-modal-close-btn" title="Đóng (Esc)">✕</button>
+            </div>
+            <div class="telecom-modal-badge">MOBIFONE TELECOM SECURITY</div>
+            <h3 class="telecom-modal-title" id="telecom-modal-doc-title">Tài liệu Kỹ thuật Viễn thông</h3>
+            <p class="telecom-modal-desc">Tài liệu thuộc phân hệ <strong>Telecommunication Systems</strong> lưu trữ sơ đồ hạ tầng nội bộ. Vui lòng nhập mật khẩu để mở khóa truy cập.</p>
+            <form id="telecom-modal-form" class="telecom-auth-form" autocomplete="off">
+                <div class="telecom-input-wrapper">
+                    <svg class="telecom-key-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <input type="password" id="telecom-modal-input" class="telecom-pass-input" placeholder="Nhập mật khẩu bảo mật..." autocomplete="off" spellcheck="false" required>
+                    <button type="button" class="telecom-eye-btn" id="telecom-modal-eye" title="Hiện/Ẩn mật khẩu">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+                <div class="telecom-auth-error" id="telecom-modal-error"></div>
+                <div class="telecom-modal-actions">
+                    <button type="button" class="telecom-cancel-btn" id="telecom-modal-cancel">Hủy</button>
+                    <button type="submit" class="telecom-submit-btn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                        <span>Mở khóa Tài liệu</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(telecomModal);
+
+    let pendingTelecomCallback = null;
+    const telecomModalInput = telecomModal.querySelector('#telecom-modal-input');
+    const telecomModalError = telecomModal.querySelector('#telecom-modal-error');
+    const telecomModalCard = telecomModal.querySelector('.telecom-modal-card');
+    const telecomModalDocTitle = telecomModal.querySelector('#telecom-modal-doc-title');
+    const telecomModalEye = telecomModal.querySelector('#telecom-modal-eye');
+
+    const closeTelecomModal = () => {
+        telecomModal.classList.remove('show');
+        telecomModalInput.value = '';
+        telecomModalError.textContent = '';
+        pendingTelecomCallback = null;
+    };
+
+    const promptTelecomPassword = (onSuccess, docTitle = 'Tài liệu Kỹ thuật Viễn thông') => {
+        pendingTelecomCallback = onSuccess;
+        if (telecomModalDocTitle) telecomModalDocTitle.textContent = docTitle;
+        telecomModalInput.value = '';
+        telecomModalInput.type = 'password';
+        telecomModalError.textContent = '';
+        telecomModal.classList.add('show');
+        setTimeout(() => telecomModalInput.focus(), 60);
+    };
+
+    telecomModal.querySelector('#telecom-modal-close-btn').onclick = closeTelecomModal;
+    telecomModal.querySelector('#telecom-modal-cancel').onclick = closeTelecomModal;
+    telecomModal.onclick = (e) => {
+        if (e.target === telecomModal) closeTelecomModal();
+    };
+
+    if (telecomModalEye) {
+        telecomModalEye.onclick = () => {
+            const isPass = telecomModalInput.type === 'password';
+            telecomModalInput.type = isPass ? 'text' : 'password';
+            telecomModalInput.focus();
+        };
+    }
+
+    telecomModal.querySelector('#telecom-modal-form').onsubmit = (e) => {
+        e.preventDefault();
+        const val = telecomModalInput.value.trim();
+        if (val === TELECOM_PASSWORD || val.toUpperCase() === TELECOM_PASSWORD) {
+            const cb = pendingTelecomCallback;
+            setTelecomUnlocked(true);
+            closeTelecomModal();
+            showToast('🔓 Xác thực thành công! Đã mở khóa tài liệu Viễn thông MobiFone.');
+            if (typeof cb === 'function') cb();
+        } else {
+            telecomModalError.textContent = '⚠ Mật khẩu không chính xác! Vui lòng nhập đúng mật khẩu bảo mật.';
+            telecomModalCard.classList.remove('shake-error');
+            void telecomModalCard.offsetWidth;
+            telecomModalCard.classList.add('shake-error');
+            telecomModalInput.select();
+        }
+    };
+
+    // Fullscreen Image Lightbox Portal (Click any diagram/photo to zoom)
+    const lightbox = document.createElement('div');
+    lightbox.id = 'image-lightbox';
+    lightbox.innerHTML = `
+        <div class="lightbox-toolbar">
+            <span class="lightbox-caption" id="lightbox-caption-text">Sơ đồ kỹ thuật</span>
+            <div class="lightbox-actions">
+                <button class="lightbox-btn" id="lightbox-zoom-btn" title="Phóng to / Thu nhỏ (Click ảnh)">🔍 Phóng to 2x</button>
+                <button class="lightbox-btn close" id="lightbox-close-btn" title="Đóng (Esc)">✕ Đóng</button>
+            </div>
+        </div>
+        <div class="lightbox-stage" id="lightbox-stage">
+            <img id="lightbox-img" src="" alt="Preview">
+        </div>
+    `;
+    document.body.appendChild(lightbox);
+
+    const lightboxImg = lightbox.querySelector('#lightbox-img');
+    const lightboxCaption = lightbox.querySelector('#lightbox-caption-text');
+    const lightboxZoomBtn = lightbox.querySelector('#lightbox-zoom-btn');
+    const lightboxStage = lightbox.querySelector('#lightbox-stage');
+
+    const toggleLightboxZoom = (e) => {
+        if (e) e.stopPropagation();
+        const zoomed = lightboxImg.classList.toggle('zoomed');
+        lightboxZoomBtn.textContent = zoomed ? '🔍 Thu nhỏ 1x' : '🔍 Phóng to 2x';
+    };
+
+    lightboxZoomBtn.onclick = toggleLightboxZoom;
+    lightboxImg.onclick = toggleLightboxZoom;
+    lightbox.querySelector('#lightbox-close-btn').onclick = () => {
+        lightbox.classList.remove('show');
+        lightboxImg.classList.remove('zoomed');
+    };
+    lightboxStage.onclick = (e) => {
+        if (e.target === lightboxStage) {
+            lightbox.classList.remove('show');
+            lightboxImg.classList.remove('zoomed');
+        }
+    };
 
     // In-memory cache for ultra-fast instant page switching (0ms latency)
     const pageCache = new Map();
@@ -273,6 +464,88 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!mdBody || !markdownText || typeof marked === 'undefined') return;
 
         const currentPath = targetPath || window.location.pathname.split('/').pop() || 'index.html';
+        window._currentRawMarkdown = markdownText;
+        window._currentArticlePath = currentPath;
+        updateSidebarLockBadges();
+
+        // Security Gate Check for Protected Telecom Articles
+        if (isTelecomPage(currentPath) && !isTelecomUnlocked()) {
+            const existingRightSidebar = document.getElementById('right-sidebar');
+            if (existingRightSidebar) existingRightSidebar.remove();
+            const existingTopbar = document.querySelector('.sticky-topbar');
+            if (existingTopbar) existingTopbar.remove();
+            const existingPostNav = document.querySelector('.post-navigation');
+            if (existingPostNav) existingPostNav.remove();
+
+            const artInfo = articlesList.find(a => a.url === currentPath);
+            const docTitle = artInfo ? artInfo.title : 'Tài liệu Kỹ thuật Viễn thông';
+
+            mdBody.innerHTML = `
+                <div class="telecom-inline-gate">
+                    <div class="telecom-gate-card">
+                        <div class="telecom-shield-icon large">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><path d="M10 11V9a2 2 0 1 1 4 0v2"></path></svg>
+                        </div>
+                        <div class="telecom-modal-badge">MOBIFONE TELECOM SECURITY GATE</div>
+                        <h1 class="telecom-gate-title">${docTitle}</h1>
+                        <p class="telecom-gate-desc">
+                            Tài liệu kỹ thuật thuộc danh mục <strong>Telecommunication Systems</strong> chứa sơ đồ mạng lưới và hạ tầng trạm viễn thông nội bộ. Vui lòng nhập mật khẩu bảo mật để xem nội dung chi tiết.
+                        </p>
+                        <form id="inline-telecom-form" class="telecom-auth-form inline-form" autocomplete="off">
+                            <div class="telecom-input-wrapper">
+                                <svg class="telecom-key-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                <input type="password" id="inline-telecom-input" class="telecom-pass-input" placeholder="Nhập mật khẩu bảo mật Telecom..." autocomplete="off" spellcheck="false" required>
+                                <button type="button" class="telecom-eye-btn" id="inline-telecom-eye" title="Hiện/Ẩn mật khẩu">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                            </div>
+                            <div class="telecom-auth-error" id="inline-telecom-error"></div>
+                            <button type="submit" class="telecom-submit-btn full-width">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                                <span>Xác thực & Mở khóa Tài liệu</span>
+                            </button>
+                        </form>
+                        <div class="telecom-gate-footer">
+                            <span>🔒 Bảo vệ toàn bộ các bài viết trong mục <strong>Telecommunication Systems</strong></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const inlineForm = mdBody.querySelector('#inline-telecom-form');
+            const inlineInput = mdBody.querySelector('#inline-telecom-input');
+            const inlineError = mdBody.querySelector('#inline-telecom-error');
+            const inlineCard = mdBody.querySelector('.telecom-gate-card');
+            const inlineEye = mdBody.querySelector('#inline-telecom-eye');
+
+            setTimeout(() => inlineInput && inlineInput.focus(), 60);
+
+            if (inlineEye && inlineInput) {
+                inlineEye.onclick = () => {
+                    inlineInput.type = inlineInput.type === 'password' ? 'text' : 'password';
+                    inlineInput.focus();
+                };
+            }
+
+            if (inlineForm) {
+                inlineForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    const val = inlineInput.value.trim();
+                    if (val === TELECOM_PASSWORD || val.toUpperCase() === TELECOM_PASSWORD) {
+                        setTelecomUnlocked(true);
+                        showToast('🔓 Xác thực thành công! Đã mở khóa tài liệu Viễn thông MobiFone.');
+                        renderArticle(markdownText, currentPath);
+                    } else {
+                        inlineError.textContent = '⚠ Mật khẩu không chính xác! Vui lòng kiểm tra lại.';
+                        inlineCard.classList.remove('shake-error');
+                        void inlineCard.offsetWidth;
+                        inlineCard.classList.add('shake-error');
+                        inlineInput.select();
+                    }
+                };
+            }
+            return;
+        }
 
         const renderer = new marked.Renderer();
         const originalCode = renderer.code;
@@ -456,18 +729,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 mdBody.prepend(metaBar);
             }
         }
+        const isCurrentTelecom = isTelecomPage(currentPath);
         metaBar.innerHTML = `
             <div class="reading-time-pill" title="Ước tính thời gian đọc dựa trên ${words.toLocaleString()} từ">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>Khoảng <strong>${readingMinutes} phút đọc</strong> (${words.toLocaleString()} từ)</span>
             </div>
             <div class="meta-actions">
+                ${isCurrentTelecom ? `
+                <button class="lock-telecom-btn meta-btn" title="Khóa bảo mật phân hệ Viễn thông">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span>Khóa bảo mật</span>
+                </button>
+                ` : ''}
                 <button class="share-article-btn meta-btn" title="Sao chép liên kết bài viết">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                     <span>Chia sẻ</span>
                 </button>
             </div>
         `;
+
+        const lockBtn = metaBar.querySelector('.lock-telecom-btn');
+        if (lockBtn) {
+            lockBtn.onclick = () => {
+                setTelecomUnlocked(false);
+                showToast('🔒 Đã khóa bảo mật phân hệ Viễn thông!');
+                renderArticle(markdownText, currentPath);
+            };
+        }
 
         const shareBtn = metaBar.querySelector('.share-article-btn');
         if (shareBtn) {
@@ -488,6 +777,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 2000);
             };
         }
+
+        // Click-to-Zoom Lightbox for Images & Diagrams
+        mdBody.querySelectorAll('img').forEach(img => {
+            img.classList.add('lightbox-clickable');
+            img.setAttribute('title', 'Nhấp để xem ảnh phóng to / toàn màn hình');
+            img.onclick = () => {
+                lightboxImg.src = img.src;
+                lightboxCaption.textContent = img.alt || 'Sơ đồ kỹ thuật';
+                lightboxImg.classList.remove('zoomed');
+                lightboxZoomBtn.textContent = '🔍 Phóng to 2x';
+                lightbox.classList.add('show');
+            };
+        });
 
         // Heading Anchor Links & Pulse Highlight
         const triggerTargetPulse = (targetEl) => {
@@ -788,6 +1090,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const cleanUrl = url.split('#')[0];
         const hash = url.includes('#') ? url.split('#')[1] : null;
         const currentClean = window.location.pathname.split('/').pop() || 'index.html';
+
+        if (isTelecomPage(cleanUrl) && !isTelecomUnlocked()) {
+            const docObj = articlesList.find(a => a.url === cleanUrl);
+            const docTitle = docObj ? docObj.title : 'Tài liệu Kỹ thuật Viễn thông';
+            promptTelecomPassword(() => {
+                navigateSmoothly(url, push);
+            }, docTitle);
+            return;
+        }
 
         if (cleanUrl === currentClean || cleanUrl === '') {
             if (hash) {
@@ -1114,16 +1425,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         selectedIndex = 0;
-        spotlightResults.innerHTML = matches.map((m, idx) => `
-            <a href="${m.url}" class="spotlight-item ${idx === 0 ? 'selected' : ''}">
-                <div class="spotlight-item-badge">${m.category} • ${m.article}</div>
-                <div class="spotlight-item-title">${highlightMatch(m.section, query)}</div>
-                <div class="spotlight-item-snippet">${highlightMatch(m.text, query)}</div>
-            </a>
-        `).join('');
+        const unlocked = isTelecomUnlocked();
+        spotlightResults.innerHTML = matches.map((m, idx) => {
+            const isProtected = isTelecomPage(m.url) && !unlocked;
+            const snippetText = isProtected ? '🔒 [Tài liệu Viễn thông được bảo vệ mật khẩu — Nhấn để mở khóa]' : highlightMatch(m.text, query);
+            const badgeIcon = isProtected ? '🔒 ' : '';
+            return `
+                <a href="${m.url}" class="spotlight-item ${idx === 0 ? 'selected' : ''}">
+                    <div class="spotlight-item-badge">${badgeIcon}${m.category} • ${m.article}</div>
+                    <div class="spotlight-item-title">${highlightMatch(m.section, query)}</div>
+                    <div class="spotlight-item-snippet">${snippetText}</div>
+                </a>
+            `;
+        }).join('');
 
         const items = spotlightResults.querySelectorAll('.spotlight-item');
         items.forEach((item, idx) => {
+            item.onclick = (e) => {
+                e.preventDefault();
+                closeSpotlight();
+                navigateSmoothly(item.getAttribute('href'));
+            };
             item.onmouseenter = () => {
                 items.forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
