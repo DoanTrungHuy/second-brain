@@ -1912,10 +1912,20 @@ body.code-modal-open {
     transform: scale(1);
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 .markdown-body img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 1.5em auto;
     cursor: zoom-in;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    border-radius: 8px;
+    border-radius: 10px;
+    box-sizing: border-box;
 }
 
 .markdown-body img:hover {
@@ -3561,6 +3571,48 @@ button:active,
 }
 
 @media (max-width: 768px) {
+    /* Mobile Responsive Images & Photos (Fix clipping & cutoff) */
+    .markdown-body img {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 14px auto !important;
+        border-radius: 8px !important;
+        object-fit: contain !important;
+    }
+
+    /* Mobile Responsive Code Blocks (Preserve monospace ASCII & allow smooth touch scroll) */
+    .markdown-body pre {
+        max-width: 100% !important;
+        margin: 16px 0 !important;
+        border-radius: 10px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .markdown-body pre code {
+        font-size: 0.78rem !important;
+        padding: 12px 14px !important;
+        white-space: pre !important;
+        word-break: normal !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Prevent any horizontal content overflow from breaking mobile layout */
+    .article-container {
+        padding: 16px 12px 60px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    .markdown-body {
+        max-width: 100% !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
     /* Hide keyboard shortcut helper button on touch devices */
     #kbd-shortcuts-btn {
         display: none !important;
