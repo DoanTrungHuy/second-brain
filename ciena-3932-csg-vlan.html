@@ -25,7 +25,7 @@
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cấu hình Ciena 3932 CSG: VLAN, Access - Trunk & Packet Call Flow | System Knowledge</title>
+    <title>Bản chất VLAN, Access & Trunk qua Ví dụ Thực tế Hằng ngày | System Knowledge</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%232563eb%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><rect x=%222%22 y=%222%22 width=%2220%22 height=%228%22 rx=%222%22 ry=%222%22></rect><rect x=%222%22 y=%2214%22 width=%2220%22 height=%228%22 rx=%222%22 ry=%222%22></rect><line x1=%226%22 y1=%226%22 x2=%226.01%22 y2=%226%22></line><line x1=%226%22 y1=%2218%22 x2=%226.01%22 y2=%2218%22></line></svg>">
     <meta name="description" content="Hướng dẫn toàn diện cấu hình switch Ciena 3932 CSG: Quy hoạch VLAN trạm BTS 3G/4G, truyền dẫn VNPT, bản chất Access vs Trunk và phân tích luồng gói tin Call Flow.">
     <!-- Open Graph / Social Sharing Meta Tags -->
@@ -79,7 +79,7 @@
 <a href="rru-vs-antenna.html" class="nav-item" data-file="rru-vs-antenna.html" data-protected="telecom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path></svg><span>So sánh RRU & Anten Viễn thông</span></a>
 <a href="bts-power-system.html" class="nav-item" data-file="bts-power-system.html" data-protected="telecom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg><span>Nguồn DC -48V & Pin Lithium BTS</span></a>
 <a href="mang-truyen-dan-quang-ninh.html" class="nav-item" data-file="mang-truyen-dan-quang-ninh.html" data-protected="telecom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="8" x2="12" y2="16"></line><circle cx="6" cy="19" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="9.4" y1="17.5" x2="12" y2="16"></line><line x1="14.6" y1="17.5" x2="12" y2="16"></line></svg><span>Mạng Truyền dẫn Viễn thông</span></a>
-<a href="ciena-3932-csg-vlan.html" class="nav-item active" data-file="ciena-3932-csg-vlan.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg><span>Cấu hình Ciena 3932 CSG & VLAN</span></a>
+<a href="ciena-3932-csg-vlan.html" class="nav-item active" data-file="ciena-3932-csg-vlan.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg><span>Bản chất Access & Trunk</span></a>
 </div>
     </div>
 
@@ -122,321 +122,188 @@
             }
         });
 
-        const rawMarkdown = `# 🌐 Hướng dẫn Toàn diện Ciena 3932 (CSG): Cấu hình VLAN, Bản chất Access - Trunk & Phân tích Luồng Gói Tin (Packet Call Flow)
+        const rawMarkdown = `# 💡 Bản chất VLAN, Access và Trunk: Cẩm nang Hiểu Mạng qua Ví dụ Thực tế Hằng ngày
 
 > [!NOTE]
-> Tài liệu kỹ thuật chuyên sâu về thiết bị chuyển mạch viễn thông **Ciena 3932 (Carrier Ethernet Switch / Cell Site Gateway - CSG)** chạy hệ điều hành **SAOS (Service-Aware Operating System)**.
-> Giải thích chi tiết từ thao tác dòng lệnh (CLI), bản chất phân định **Access vs. Trunk**, phân tích luồng di chuyển của gói tin (**Packet Call Flow**), đến thiết kế topology mạng viễn thông thực tế (3G / 4G / VNPT Transmission).
+> Tài liệu này không tập trung vào việc học vẹt câu lệnh, mà giúp bạn **nắm trọn bản chất cốt lõi của mạng (Networking)**:
+> Tại sao phải chia ra **Access** và **Trunk**? Khi nào bắt buộc dùng loại nào? Luồng dữ liệu chạy ra sao qua những tình huống thực chiến hằng ngày (Laptop – Switch, Switch – Switch).
 
 ---
 
-## 🗺️ PHẦN 1: TỔNG QUAN PHẦN CỨNG & KẾT NỐI BAN ĐẦU
+## 🏢 1. BÀI TOÁN THỰC TẾ: Tại sao ở nhà cắm mạng là chạy, mà đi làm lại phải có Access & Trunk?
 
-### 1.1. Cấu trúc phần cứng Ciena 3932
-Thiết bị **Ciena 3932** thường được lắp đặt tại các nhà trạm viễn thông (BTS/NodeB/eNodeB) đóng vai trò là **CSG (Cell Site Gateway)** để gom lưu lượng vô tuyến đẩy lên mạng truyền dẫn quang (Metro-E / IPBB).
+### 1.1. Ở nhà vs. Môi trường Doanh nghiệp / Viễn thông
+* **Mạng ở nhà:** Bạn cắm dây vào cổng nào của modem thì điện thoại, tivi, laptop đều vào được mạng. Vì tất cả thiết bị đều ở chung **1 mạng duy nhất**.
+* **Mạng doanh nghiệp / Viễn thông:** Người ta phải chia ra làm **nhiều mạng riêng biệt (gọi là VLAN)** chạy song song trên cùng một con Switch:
+  * Mạng Kế toán (**VLAN 10**) — Lưu bảng lương, tài chính mật.
+  * Mạng Kỹ thuật (**VLAN 20**) — Chạy server, code, dữ liệu kỹ thuật.
+  * Mạng Khách (**VLAN 30**) — Chỉ cho khách lướt web, không được chọc vào nội bộ.
+  * *Trong trạm viễn thông:* Mạng 3G (**VLAN 2764**), Mạng 4G (**VLAN 338**), Mạng Camera giám sát trạm.
 
-* **Cổng quản trị (Mgmt):** Cổng cáp đồng RJ45 độc lập phục vụ quản trị Out-of-band (OOB), tách biệt hoàn toàn với luồng dữ liệu khách hàng.
-* **Cổng 1 đến 4 (Combo Ports):** Hỗ trợ linh hoạt cả cổng cáp đồng (RJ-45) hoặc cắm module quang (SFP). Tại một thời điểm chỉ sử dụng được 1 trong 2 chế độ.
-* **Cổng 5 đến 8 (SFP Ports):** Cổng thuần quang, bắt buộc cắm module SFP quang (100M FE hoặc 1GE).
+### 1.2. Mâu thuẫn sinh ra từ việc chia VLAN
+Khi đã chia nhiều VLAN trên 1 con Switch, Switch sẽ đối mặt với 2 vấn đề lớn:
+1. **Làm sao để đưa dữ liệu cho Laptop/Camera mà nó đọc hiểu được?** (Vì máy tính, camera thông thường không hiểu mã VLAN).
+2. **Làm sao để truyền nhiều VLAN sang một Switch khác mà không cần phải kéo hàng chục sợi dây mạng?**
 
-\`\`\`
-   ┌────────────────────────────────────────────────────────┐
-   │ [Mgmt]   [Port 1-4: Combo RJ45/SFP]   [Port 5-8: SFP]  │
-   │   OOB       Cáp đồng hoặc Quang        Thuần quang     │
-   └────────────────────────────────────────────────────────┘
-\`\`\`
-
----
-
-### 1.2. Quy trình Kết nối & Đăng nhập thiết bị
-
-\`\`\`
-[Laptop Kỹ thuật] ──── (Cáp mạng RJ45) ────► [Cổng Mgmt trên Ciena 3932]
- IP: 172.16.233.213/24                          IP mặc định: 172.16.233.214
-\`\`\`
-
-1. **Cắm dây mạng:** Cắm cáp mạng RJ45 từ cổng mạng laptop vào cổng **Mgmt** trên mặt trước thiết bị Ciena.
-2. **Đặt IP tĩnh trên Laptop:**
-   * Địa chỉ IP: \`172.16.233.213\`
-   * Subnet Mask: \`255.255.255.0\` (tương đương \`/24\`)
-   * *Giải thích:* Phải đặt IP cùng dải mạng với IP mặc định của Ciena để lớp mạng IP có thể định tuyến được với nhau.
-3. **Mở phần mềm Telnet:** Sử dụng **PuTTY** hoặc **SecureCRT**, chọn kết nối **Telnet** (Port 23) tới địa chỉ \`172.16.233.214\`.
-4. **Thông tin đăng nhập mặc định:**
-   * **Username:** \`su\` *(Superuser - quyền quản trị cao nhất)*
-   * **Password:** \`wwp\` *(World Wide Packets - hãng công nghệ nền tảng của SAOS được Ciena mua lại)*
+👉 **Chính 2 bài toán này đã khai sinh ra Cổng ACCESS và Cổng TRUNK!**
 
 ---
 
-## ⚙️ PHẦN 2: CẤU HÌNH THỰC TẾ TRẠM BTS (3G, 4G, TRUYỀN DẪN VNPT)
+## 🚪 2. CỔNG ACCESS: "Cửa phòng riêng" (Vào dán tem – Ra bóc tem)
 
-### 2.1. Bảng quy hoạch cổng và phân bổ VLAN
+### 2.1. Bản chất và Đối tượng kết nối
+* **Đối tượng cắm vào:** Máy tính laptop, PC văn phòng, Camera an ninh trạm, Máy in, Trạm 3G NodeB đời cũ...
+* **Đặc điểm thiết bị:** Đây là các **thiết bị đầu cuối** (End-device). Bản thân chúng là các thiết bị **"mù VLAN"**:
+  * Chúng chỉ biết gửi và nhận các gói tin trần trụi thông thường (**Untagged**).
+  * Nếu bạn gửi cho chúng một gói tin có dán mã số VLAN (Tagged), chúng sẽ coi đó là gói tin bị lỗi/rác và **vứt bỏ ngay lập tức (Drop packet) ➜ Mất mạng!**
 
-| Cổng vật lý | Thiết bị đấu nối | Chức năng mạng | VLAN ID tham gia | Chế độ cổng |
-| :--- | :--- | :--- | :---: | :---: |
-| **Port 5** | Truyền dẫn VNPT (MAN-E) | Uplink đường trục | \`338\`, \`738\`, \`2764\` | **TRUNK** |
-| **Port 6** | Trạm 4G LTE (eNodeB) | Vô tuyến 4G | \`338\` (Data), \`738\` (O&M) | **TRUNK** |
-| **Port 7** | Trạm 3G (NodeB) | Vô tuyến 3G | \`2764\` (Iub traffic) | **ACCESS** |
+### 2.2. Nhiệm vụ của cổng Access
+Cổng Access đóng vai trò như một người bảo vệ đứng ở cửa phòng riêng:
+* **Chiều vào (Thiết bị gửi lên Switch):** Thiết bị phát gói tin không tem. Cổng Access nhận vào và **tự động dán con tem (VLAN ID)** của cổng đó lên gói tin.
+* **Chiều ra (Switch trả dữ liệu về thiết bị):** Gói tin từ trong mạng đi tới cổng Access đang có tem. Trước khi đẩy ra dây mạng cho thiết bị, cổng Access **tự động bóc sạch con tem ra**, trả lại gói tin nguyên bản sạch sẽ cho thiết bị đọc.
+
+\`\`\`text
+[Laptop / Camera] 
+       │ 
+       │ (1) Gói tin KHÔNG TEM (Untagged)
+       ▼
+[CỔNG ACCESS] ──► TỰ ĐỘNG DÁN TEM (Ví dụ: Tem VLAN 10)
+       │
+       ▼
+ [RUỘT SWITCH] ──► Chuyển mạch an toàn trong phạm vi VLAN 10
+       │
+       ▼
+[CỔNG ACCESS] ──► TỰ ĐỘNG BÓC TEM (Lột bỏ mã VLAN 10)
+       │
+       │ (2) Trả lại gói tin KHÔNG TEM sạch sẽ
+       ▼
+[Laptop / Camera]
+\`\`\`
+
+> 🎯 **Quy tắc nhớ nhanh:** Cắm vào thiết bị đầu cuối chỉ thuộc về 1 dịch vụ ➜ **Bắt buộc chọn ACCESS**.
 
 ---
 
-### 2.2. Chi tiết từng câu lệnh cấu hình (Line-by-Line)
+## 🚛 3. CỔNG TRUNK: "Thùng xe tải chở hàng chung" (Giữ nguyên tem)
 
-\`\`\`bash
-# 1. Khởi tạo các VLAN dịch vụ trên switch
-vlan create vlan 338,738,2764
-\`\`\`
-* **Giải thích:** Tạo danh sách 3 VLAN trên switch Ciena: 338 & 738 (cho 4G LTE), 2764 (cho 3G). Trên hệ điều hành SAOS, VLAN phải được khởi tạo trước thì mới gán cổng vào được.
+### 3.1. Bản chất và Đối tượng kết nối
+* **Đối tượng cắm vào:**
+  * Dây nối giữa **Switch này sang Switch khác** (ví dụ: Switch Tầng 1 nối Switch Tầng 2).
+  * Dây nối từ **Switch lên Router truyền dẫn** (VNPT, Viettel).
+  * Dây nối vào thiết bị thông minh chạy nhiều dịch vụ cùng lúc (Server ảo hóa ESXi, BBU 4G/5G).
 
-\`\`\`bash
-# 2. Gán các VLAN vào Port 5 (Cổng truyền dẫn VNPT Uplink)
-vlan add vlan 338,738,2764 port 5
-\`\`\`
-* **Giải thích:** Port 5 là cổng "thoát tổng" đưa dữ liệu về mạng lõi. Lệnh này cấu hình Port 5 ở chế độ **TRUNK**, cho phép cả 3 VLAN đi qua đồng thời và **giữ nguyên thẻ nhãn (VLAN Tag 802.1Q)**.
+### 3.2. Tại sao bắt buộc phải dùng Trunk?
+1. **Tiết kiệm cổng và dây cáp cực lớn:**
+   * Giả sử tòa nhà có 5 phòng ban (5 VLAN). Nếu không có Trunk, bạn phải cắm **5 sợi dây mạng** nối giữa 2 con Switch.
+   * Cổng Trunk cho phép gom cả 5 phòng ban chạy chung trên **đúng 1 sợi dây cáp duy nhất**!
+2. **Giữ nguyên con tem để bên kia phân loại:**
+   * Vì nhiều phòng ban đi chung trên 1 sợi dây, các gói tin bắt buộc phải **được giữ nguyên con tem (VLAN Tag)** trên suốt đường đi.
+   * Khi sang đến Switch đối diện, Switch đó nhìn con tem sẽ biết ngay: Gói nào tem Kế toán thì chuyển cho Kế toán, gói nào tem Kỹ thuật thì chuyển cho Kỹ thuật, **tuyệt đối không bị lẫn hàng**.
 
-\`\`\`bash
-# 3. Gán VLAN 4G vào Port 6
-vlan add vlan 338,738 port 6
-\`\`\`
-* **Giải thích:** Thiết bị 4G eNodeB hiện đại tự nó phát sinh 2 luồng dịch vụ có gắn sẵn tag (VLAN 338 cho dữ liệu thuê bao và VLAN 738 cho quản trị trạm). Do đó Port 6 cũng đóng vai trò là **TRUNK** để cho phép cả 2 tem nhãn này đi qua.
-
-\`\`\`bash
-# 4. Gán VLAN 3G vào Port 7 và cấu hình chế độ ACCESS
-vlan add vlan 2764 port 7
-port set port 7 pvid 2764
-\`\`\`
-* **Giải thích:** 
-  * \`vlan add vlan 2764 port 7\`: Cho phép lưu lượng thuộc VLAN 2764 đi qua Port 7.
-  * \`port set port 7 pvid 2764\`: **Cực kỳ quan trọng!** Thiết lập **PVID (Port VLAN ID)** = 2764. Lệnh này biến Port 7 thành cổng **ACCESS**. Thiết bị trạm 3G cũ chỉ phát gói tin không nhãn (Untagged), lệnh này giúp switch tự động **dán tem 2764** khi gói tin từ 3G đi vào switch, và **bóc bỏ tem 2764** trước khi trả gói tin về cho trạm 3G.
-
-\`\`\`bash
-# 5. Tắt tính năng tự động đàm phán trên các cổng truyền tải
-port set port 5 auto-neg off
-port set port 6 auto-neg off
-port set port 7 auto-neg off
-\`\`\`
-* **Giải thích:** **Auto-Negotiation (auto-neg)** là cơ chế tự động thương lượng tốc độ và chế độ song công (Duplex). Trong môi trường viễn thông, khi Ciena bắt tay với các thiết bị hãng khác (Huawei, Ericsson, Nokia, ZTE, Converter quang...), tính năng tự thương lượng rất dễ gây ra hiện tượng **mismatch (không đồng bộ)**, làm cổng bị chập chờn hoặc không Link Up. Ép cứng \`auto-neg off\` đảm bảo liên kết vật lý luôn ổn định.
-
-\`\`\`bash
-# 6. Ép tốc độ cổng theo chuẩn kênh truyền
-port set port 5 speed hundred   # Nếu luồng truyền dẫn VNPT thuê là Fast Ethernet (100 Mbps)
-port set port 5 speed gigabit   # Nếu trạm được nâng cấp luồng Gigabit Ethernet (1 Gbps)
-port set port 7 speed hundred   # Cổng 3G luôn ép cố định 100 Mbps (FE) theo chuẩn card trạm 3G
+\`\`\`text
+┌──────────────┐                               ┌───────────────┐
+│   SWITCH 1   ├─── [1 SỢI DÂY CÁP DUY NHẤT] ───┤   SWITCH 2    │
+└──────────────┘    (Chở chung tem 10, 20, 30)  └───────────────┘
+       ▲                                               ▲
+   [CỔNG TRUNK]                                   [CỔNG TRUNK]
+(Cho phép đi qua &                             (Cho phép đi qua &
+  GIỮ NGUYÊN TEM)                                GIỮ NGUYÊN TEM)
 \`\`\`
 
-\`\`\`bash
-# 7. Lưu cấu hình vào bộ nhớ vĩnh viễn
-config save
-\`\`\`
-* **Giải thích:** Lưu toàn bộ cấu hình từ bộ nhớ tạm (RAM/running-config) vào bộ nhớ Flash (startup-config). Nếu không gõ lệnh này, khi trạm mất điện hoặc khởi động lại, switch sẽ trở về trạng thái trắng.
+> 🎯 **Quy tắc nhớ nhanh:** Dây liên kết giữa 2 thiết bị mạng chở nhiều VLAN ➜ **Bắt buộc chọn TRUNK**.
 
 ---
 
-## 🎯 PHẦN 3: BẢN CHẤT CỐT LÕI — TẠI SAO PHẢI CÓ ACCESS VÀ TRUNK?
+## 🧠 4. GIẢI ĐÁP CÁC CÂU HỎI THỰC CHIẾN KINH ĐIỂN
 
-Để phân biệt chính xác khi nào dùng Access, khi nào dùng Trunk, chỉ cần dựa vào nguyên lý cốt lõi:
+Dưới đây là các tình huống thực tế mà kỹ sư mạng hay gặp nhất:
 
-> **"Gói tin có mang nhãn thẻ (VLAN Tag 802.1Q) hay không, và thiết bị cắm ở đầu dây bên kia có biết đọc nhãn thẻ đó không?"**
+---
 
-\`\`\`
-Gói tin Ethernet chuẩn (Untagged):
-┌──────────────┬──────────────┬──────────┬──────────────┬────────┐
-│   MAC Đích   │  MAC Nguồn   │   Type   │   Dữ liệu    │  FCS   │
-└──────────────┴──────────────┴──────────┴──────────────┴────────┘
+### ❓ Câu hỏi 1: Lap 1 cắm Port 1 (SW1), Lap 2 cắm Port 2 (SW2) đều cấu hình Access VLAN 10 thì có thông nhau không?
 
-Gói tin được dán tem VLAN (802.1Q Tagged - Thêm 4 Bytes):
-┌──────────────┬──────────────┬──────────────┬──────────┬──────────────┬────────┐
-│   MAC Đích   │  MAC Nguồn   │ VLAN Tag(4B) │   Type   │   Dữ liệu    │  FCS   │
-└──────────────┴──────────────┴──────────────┴──────────┴──────────────┴────────┘
-                                     ▲
-                                [VLAN ID: 12-bit]
+\`\`\`text
+[Lap 1] ──► (Port 1: Access 10) [SW 1]                      [SW 2] (Port 2: Access 10) ◄── [Lap 2]
+                                   │                           ▲
+                                   └─── [Dây cáp nối 2 SW] ────┘
 \`\`\`
 
----
-
-### 3.1. Cổng ACCESS (Dành cho Thiết bị Đầu cuối)
-
-* **Đối tượng kết nối:** Máy tính laptop, Camera an ninh, Máy in, Trạm 3G NodeB (các thiết bị chỉ thuộc về 1 mạng duy nhất).
-* **Đặc điểm thiết bị:** Là các thiết bị **"mù VLAN"**, không hiểu mã thẻ 802.1Q. Nếu đưa gói tin có gắn mã VLAN cho chúng, chúng sẽ coi là gói tin lỗi và **vứt bỏ (Drop packet)**.
-* **Cơ chế hoạt động:**
-  * **Chiều vào (Ingress):** Nhận gói tin trần (Untagged) từ thiết bị ➜ Switch tự động **dán nhãn PVID** tương ứng vào gói tin.
-  * **Chiều ra (Egress):** Trước khi đẩy gói tin ra dây mạng cho thiết bị ➜ Switch tự động **bóc bỏ nhãn VLAN** để trả lại gói tin trần sạch sẽ.
+* **TRẢ LỜI:** **HOÀN TOÀN THÔNG NHAU!**
+* **Điều kiện bắt buộc đi kèm:**
+  1. Giữa SW1 và SW2 phải có **1 sợi dây cáp nối với nhau**.
+  2. Hai đầu cổng của sợi dây cáp đó phải được cấu hình là **TRUNK** (cho phép VLAN 10 đi qua).
+  3. Hai Laptop được đặt địa chỉ IP cùng một dải mạng (ví dụ \`192.168.10.1\` và \`192.168.10.2\`) và đã tắt tường lửa Windows Firewall.
 
 ---
 
-### 3.2. Cổng TRUNK (Đường ống Gom cho nhiều VLAN)
+### ❓ Câu hỏi 2: Dây cáp nối giữa SW1 và SW2 có phải cấu hình cả 2 đầu cổng không?
 
-* **Đối tượng kết nối:** Giữa Switch sang Switch, Switch sang Router truyền dẫn (VNPT), Switch cắm vào máy chủ ảo hóa (ESXi), hoặc cắm vào BBU 4G/5G.
-* **Tại sao bắt buộc phải dùng Trunk?**
-  1. **Tiết kiệm cổng và dây cáp:** Nếu có 10 VLAN khác nhau, thay vì phải cắm 10 sợi dây cáp riêng biệt, ta chỉ cần **1 sợi cáp duy nhất** nối giữa 2 thiết bị mạng.
-  2. **Giữ nguyên con tem phân loại:** Trên sợi dây cáp chung đó, mọi gói tin bắt buộc phải được **giữ nguyên mã nhãn VLAN Tag** để sang đến thiết bị đối diện, thiết bị đó nhìn nhãn là phân loại được gói tin thuộc về dịch vụ nào.
+* **TRẢ LỜI:** **BẮT BUỘC PHẢI CẤU HÌNH CẢ 2 ĐẦU CỔNG!**
+* **Tại sao?**
+  * Sợi dây mạng có 2 đầu: 1 đầu cắm vào Port trên SW1 (ví dụ Port 8), 1 đầu cắm vào Port trên SW2 (ví dụ Port 8).
+  * Bạn phải cấu hình:
+    * Trên SW1: Khai **Port 8 là TRUNK** (cho phép VLAN 10).
+    * Trên SW2: Khai **Port 8 là TRUNK** (cho phép VLAN 10).
+* **Nếu chỉ cấu hình 1 bên thì sao?** 
+  * SW1 gửi gói tin có dán tem sang. 
+  * SW2 chưa được cấu hình Trunk nên không hiểu con tem đó là gì ➜ **Nó vứt bỏ luôn gói tin** ➜ Mất thông mạng ngay lập tức!
+* 👉 **Quy tắc vàng:** Hai đầu của một sợi dây liên kết mạng phải luôn **đồng bộ cấu hình với nhau**.
 
 ---
 
-### 3.3. So sánh tổng kết
+### ❓ Câu hỏi 3: Nếu không dùng Trunk mà dùng Access nối 2 Switch thì có được không? Số dây nối tính thế nào?
 
-| Tiêu chí | Cổng ACCESS | Cổng TRUNK |
+Đây là câu hỏi tư duy hay nhất!
+
+* **TRẢ LỜI:** **ĐƯỢC, NHƯNG SỐ DÂY NỐI PHỤ THUỘC VÀO SỐ LƯỢNG VLAN, KHÔNG PHỤ THUỘC VÀO SỐ LƯỢNG LAPTOP!**
+
+#### Tình huống A: Trên SW1 có 100 Laptop nhưng TẤT CẢ ĐỀU LÀ VLAN 10
+* Bạn **CHỈ CẦN ĐÚNG 1 SỢI DÂY ACCESS (VLAN 10)** nối SW1 sang SW2!
+* Vì cả 100 laptop đều chung 1 nhóm, sợi dây Access VLAN 10 này đóng vai trò như chiếc cầu riêng cho nhóm VLAN 10 đi qua. Cả 100 máy tính dùng chung chiếc cầu này bình thường.
+
+#### Tình huống B: Trên SW1 có NHIỀU NHÓM (VLAN 10 - Kế toán, VLAN 20 - Kỹ thuật, VLAN 30 - Giám đốc)
+* Nếu bạn **cố tình không dùng Trunk mà dùng Access**:
+  * Bạn bắt buộc phải cắm **3 sợi dây cáp riêng biệt** nối giữa SW1 và SW2:
+    * Dây 1: Cấu hình Access VLAN 10 (chỉ Kế toán đi).
+    * Dây 2: Cấu hình Access VLAN 20 (chỉ Kỹ thuật đi).
+    * Dây 3: Cấu hình Access VLAN 30 (chỉ Giám đốc đi).
+
+\`\`\`text
+       ┌─────────── (Dây 1: Access VLAN 10) ───────────┐
+       │                                               ▼
+┌──────┴───────┐                               ┌───────────────┐
+│   SWITCH 1   ├─────────── (Dây 2: Access VLAN 20) ───────────┤   SWITCH 2    │
+└──────┬───────┘                               └───────▲───────┘
+       │                                               │
+       └─────────── (Dây 3: Access VLAN 30) ───────────┘
+\`\`\`
+
+> ⚠️ **Hậu quả:** Nếu công ty có 10 VLAN, bạn sẽ mất **10 sợi dây mạng** và tốn toi **10 cổng mỗi bên switch** chỉ để nối 2 switch với nhau!
+> 👉 **Đó là lý do cổng TRUNK ra đời:** Chỉ cần cắm **1 sợi dây duy nhất**, cấu hình 2 đầu là TRUNK là nó gánh được tất cả các VLAN.
+
+---
+
+## 🏷️ 5. GỌI TÊN ĐƯỜNG DÂY ĐÚNG CHUẨN KỸ THUẬT
+
+Khi đi làm, anh em kỹ thuật gọi tên các sợi dây này theo 2 góc nhìn:
+
+| Vị trí nối | Tên theo Chức năng Kỹ thuật | Tên theo Dây vật lý ngoài đời |
 | :--- | :--- | :--- |
-| **Số lượng VLAN cho phép** | Chỉ duy nhất **1 VLAN** | **Nhiều VLAN** cùng lúc |
-| **Trạng thái gói tin trên dây** | Luôn là **Untagged** (không có nhãn) | Luôn là **Tagged** (mang nhãn thẻ 802.1Q) |
-| **Thiết bị cắm vào** | Laptop, PC, Camera, NodeB 3G | Switch khác, Router VNPT, BBU 4G/5G |
-| **Hành vi xử lý tem** | Vào thì **dán tem**, Ra thì **bóc tem** | **Giữ nguyên tem** khi truyền qua cáp |
-| **Hậu quả nếu cấu hình sai** | Cắm PC vào Trunk ➜ PC không hiểu tem ➜ **Mất mạng** | Nối 2 Switch bằng Access ➜ **Chỉ chạy được 1 VLAN**, các VLAN khác bị nghẽn |
+| **Từ Laptop ➜ Switch** | **Đường Access** *(Access Link)* | Cáp thẳng *(Straight-Through)* hoặc Dây nhảy mạng *(Patch cord RJ45)* |
+| **Từ SW1 ➜ SW2** | **Đường Trunk** *(Trunk Link)* hoặc **Đường Uplink** | Cáp chéo *(Crossover)*, Cáp thẳng *(Auto-MDIX)* hoặc Dây nhảy quang *(Fiber Patch cord SFP)* |
+
+* **Mẹo thực tế:** Ngày nay các dòng switch hiện đại đều có tính năng tự đảo chân tín hiệu (**Auto-MDIX**), nên khi nối Switch sang Switch bạn cắm cáp thẳng hay cáp chéo thiết bị đều tự nhận.
 
 ---
 
-## 🔄 PHẦN 4: PHÂN TÍCH LUỒNG GÓI TIN CHI TIẾT (PACKET CALL FLOW)
+## ⚡ 6. QUY TẮC NẰM LÒNG 3 GIÂY ĐỂ ĐI LÀM KHÔNG BAO GIỜ NHẦM
 
-### 4.1. Call Flow 1: Trạm 3G ➜ Switch Ciena ➜ Truyền dẫn VNPT
+Mỗi khi chuẩn bị cấu hình một cổng mạng, bạn chỉ cần tự hỏi đúng 1 câu:
 
-\`\`\`text
-[Trạm 3G NodeB]
-       │
-       │ (1) Gói tin TRẦN (Untagged)
-       ▼
-[Port 7: ACCESS (PVID 2764)] ──► (2) Switch DÁN TEM VLAN 2764
-       │
-       ▼
- [Switch Ciena 3932]         ──► (3) Chuyển mạch trong nội bộ VLAN 2764
-       │
-       ▼
-[Port 5: TRUNK]              ──► (4) GIỮ NGUYÊN TEM VLAN 2764
-       │
-       │ (5) Gói tin CÓ TEM 2764 (Tagged)
-       ▼
-[Mạng truyền dẫn VNPT / RNC Core]
-\`\`\`
+> **"Cổng này đang cắm vào thiết bị đầu cuối chỉ dùng 1 mạng, hay cắm vào thiết bị mạng cần gom nhiều đường?"**
 
-* **Chiều đi (3G lên Core VNPT):**
-  1. Trạm 3G gửi frame Ethernet tiêu chuẩn (không có tag).
-  2. Frame đi vào **Port 7 (Access)**: Switch kiểm tra cấu hình PVID và lập tức **chèn 4 bytes mã nhãn VLAN 2764** vào header của frame.
-  3. Bộ vi xử lý chuyển mạch tra bảng MAC và chuyển frame sang hàng đợi của **Port 5 (Uplink)**.
-  4. Frame đi ra **Port 5 (Trunk)**: Switch kiểm tra danh sách VLAN cho phép, thấy VLAN 2764 hợp lệ ➜ **giữ nguyên tem 2764** và phát quang sang thiết bị VNPT.
-  5. Phía VNPT nhận frame có tem 2764 ➜ định tuyến chuẩn xác về trung tâm điều khiển 3G (RNC).
-
-* **Chiều về (Core VNPT trả lời trạm 3G):**
-  1. VNPT gửi frame có sẵn **tem 2764** vào Port 5 của Ciena.
-  2. Port 5 (Trunk) nhận frame, kiểm tra hợp lệ và đưa vào ruột switch.
-  3. Switch tra bảng MAC đích, xác định cổng ra là Port 7.
-  4. Trước khi bắn frame ra Port 7 (Access), Switch thực hiện thao tác **BÓC BỎ (Strip) con tem 2764**.
-  5. Trạm 3G nhận frame trần sạch sẽ, xử lý thông suốt cuộc gọi.
-
----
-
-### 4.2. Call Flow 2: Laptop nối Switch (Mô hình cùng VLAN vs Khác VLAN)
-
-\`\`\`text
-[Laptop A: Kế toán]          [Laptop B: Kế toán]          [Laptop C: Kỹ thuật]
-       │                            ▲                            ▲
-       │                            │                            │
-[Port 1: Access 10]          [Port 2: Access 10]          [Port 3: Access 20]
-  └─────────────────────────────────┴────────────────────────────┘
-                              [ SWITCH ]
-\`\`\`
-
-* **Cùng VLAN 10 (Laptop A gửi Laptop B):**
-  * Laptop A gửi frame trần ➜ Port 1 dán tem 10.
-  * Switch thấy Laptop B ở Port 2 (cùng VLAN 10) ➜ Port 2 bóc tem 10 ➜ Laptop B nhận frame trần.
-  * 👉 **Hai máy thông mạng hoàn toàn mà không hề biết có sự tồn tại của VLAN.**
-* **Khác VLAN (Laptop A muốn gửi Laptop C):**
-  * Laptop A gửi frame trần ➜ Port 1 dán tem 10.
-  * Switch kiểm tra Port 3 của Laptop C thuộc **VLAN 20**. Vì khác biệt VLAN ở Layer 2, Switch **hủy bỏ gói tin ngay lập tức (Drop)**.
-  * 👉 **Bảo mật tuyệt đối giữa các phòng ban.**
-
----
-
-### 4.3. Call Flow 3: Switch nối Switch qua đường Trunk liên tầng
-
-\`\`\`text
-[TẦNG 1]                                                     [TẦNG 2]
-Laptop A (VLAN 10)                                           Laptop B (VLAN 10)
-       │                                                             ▲
-       ▼                                                             │
-(Port 1: Access 10)                                          (Port 2: Access 10)
-┌──────────────┐                                            ┌──────────────┐
-│   SWITCH 1   │                                            │   SWITCH 2   │
-│              │                                            │              │
-│ (Port 8)     │                                            │     (Port 8) │
-└──────┬───────┘                                            └──────▲───────┘
-       │                                                           │
-       └──────── [Cổng TRUNK] ──(Dây cáp nối 2 SW)──► [Cổng TRUNK] ┘
-\`\`\`
-
-1. Laptop A gửi gói tin không tem vào **Port 1 (SW1)** ➜ SW1 **dán tem 10**.
-2. SW1 chuyển gói tin ra **Port 8 (Trunk)** ➜ Giữ nguyên tem 10, bắn qua dây cáp liên switch.
-3. Gói tin mang tem 10 chạy vào **Port 8 (Trunk)** của **SW2** ➜ SW2 chấp nhận gói tin vì Port 8 cho phép VLAN 10.
-4. SW2 tra địa chỉ đích thấy Laptop B ở **Port 2 (Access)** ➜ SW2 **bóc tem 10** và trả frame nguyên bản cho Laptop B.
-
----
-
-## 🔌 PHẦN 5: BẢN CHẤT ĐƯỜNG DÂY NỐI VÀ NGUYÊN TẮC THIẾT KẾ MẠNG
-
-### 5.1. Dây cáp từ Laptop đến Switch và từ Switch sang Switch gọi là gì?
-
-| Vị trí kết nối | Tên gọi theo Chức năng Kỹ thuật | Tên gọi theo Dây vật lý |
-| :--- | :--- | :--- |
-| **Laptop ➜ Switch** | **Đường Access** *(Access Link)* | Cáp thẳng *(Straight-Through)* hoặc Dây nhảy mạng *(Patch cord RJ45)* |
-| **Switch 1 ➜ Switch 2** | **Đường Trunk** *(Trunk Link)* hoặc **Uplink** | Cáp chéo *(Crossover)* hoặc Cáp thẳng *(Auto-MDIX)* hoặc Dây nhảy quang *(Fiber Patch cord SFP)* |
-
----
-
-### 5.2. Dây cáp nối giữa 2 Switch có phải cấu hình cả 2 đầu cổng không?
-* **CÂU TRẢ LỜI: BẮT BUỘC PHẢI CẤU HÌNH CẢ 2 ĐẦU CỔNG!**
-* Sợi dây mạng có 2 đầu: 1 đầu cắm vào Port trên Switch 1, 1 đầu cắm vào Port trên Switch 2. Cả 2 cổng này **đều phải được khai báo cấu hình TRUNK đồng bộ với nhau**.
-* Nếu một bên là Trunk mà bên kia quên cấu hình (vẫn là Access hoặc chưa mở VLAN), gói tin sẽ bị vứt bỏ ngay tại cổng vào, dẫn tới **mất kết nối hoàn toàn**.
-
----
-
-### 5.3. Trả lời bài toán: "Dùng Access nối 2 Switch thay vì Trunk thì cần bao nhiêu dây?"
-
-> **Quy tắc vàng:** Số lượng dây nối Access giữa 2 switch **PHỤ THUỘC VÀO SỐ LƯỢNG VLAN**, hoàn toàn **KHÔNG PHỤ THUỘC VÀO SỐ LƯỢNG LAPTOP**!
-
-1. **Nếu trên SW1 có 100 Laptop nhưng TẤT CẢ đều thuộc VLAN 10:**
-   * Bạn **chỉ cần đúng 1 sợi dây cáp Access (VLAN 10)** nối giữa 2 Switch là cả 100 máy đều thông sang SW2 bình thường.
-2. **Nếu trên SW1 có 3 VLAN khác nhau (VLAN 10 - Kế toán, VLAN 20 - Kỹ thuật, VLAN 30 - Giám đốc):**
-   * Nếu dùng **ACCESS**: Bạn bắt buộc phải cắm **3 sợi dây cáp riêng biệt** nối giữa 2 Switch (Sợi 1 cho VLAN 10, Sợi 2 cho VLAN 20, Sợi 3 cho VLAN 30). Nếu có 10 VLAN thì tốn 10 sợi dây và mất 10 cổng mỗi bên!
-   * Nếu dùng **TRUNK**: Bạn chỉ cần **ĐÚNG 1 SỢI DÂY CÁP DUY NHẤT** là đủ sức gánh toàn bộ các VLAN đi qua mà không lo bị lẫn lộn.
-
----
-
-## 🛠️ PHẦN 6: BỘ LỆNH QUẢN TRỊ, ĐO KIỂM QUANG & CHẨN ĐOÁN SỰ CỐ (CIENA SAOS)
-
-### 6.1. Đo kiểm công suất quang SFP (Rất quan trọng khi đi ứng cứu trạm)
-\`\`\`bash
-port xcvr show port 3 diag
-\`\`\`
-* **Giải thích:** Đọc thông số chẩn đoán số **DDM/DOM** của module quang tại Port 3:
-  * **Rx Power (dBm):** Mức công suất quang thu vào. Giúp kiểm tra suy hao tuyến cáp quang (mức chuẩn viễn thông thường nằm trong khoảng \`-8 dBm\` đến \`-18 dBm\`; nếu dưới \`-25 dBm\` là suy hao quá cao, dưới \`-30 dBm\` là đứt quang/Loss of Signal).
-  * **Tx Power (dBm):** Công suất quang phát ra của module (thường từ \`-3 dBm\` đến \`-9 dBm\`).
-  * **Temperature (°C):** Nhiệt độ hoạt động của SFP.
-
-### 6.2. Kiểm tra trạng thái toàn bộ cổng vật lý
-\`\`\`bash
-port show status
-\`\`\`
-* **Giải thích:** Hiển thị danh sách tổng thể các cổng:
-  * \`Link Up / Down\`: Đã cắm dây và có tín hiệu hay chưa.
-  * \`Speed\`: 100M hay 1000M (1G).
-  * \`Duplex\`: Full Duplex hay Half Duplex.
-  * \`Mode\`: Cổng đang chạy chế độ \`rj45\` hay \`sfp\`.
-
-### 6.3. Cấu hình cổng Combo quang/điện
-\`\`\`bash
-port set port 1 mode rj45   # Kích hoạt lỗ cắm cáp đồng RJ45 trên cổng combo 1
-port set port 1 mode sfp    # Kích hoạt khe cắm module quang SFP trên cổng combo 1
-\`\`\`
-
-### 6.4. Đặt tên chú thích cho cổng và VLAN
-\`\`\`bash
-port set port 5 description UPLINK_TO_VNPT_MANE
-port set port 6 description TO_4G_ENODEB_BBU
-port set port 7 description TO_3G_NODEB
-vlan rename vlan 2764 name 3G_TRAFFIC
-vlan show
-\`\`\`
-
-### 6.5. Mẹo xử lý sự cố thực tế khi thử nghiệm (Ping không thông)
-1. **Kiểm tra địa chỉ IP:** Hai máy tính thuộc cùng 1 VLAN muốn ping thấy nhau bắt buộc phải được đặt IP cùng một lớp mạng (ví dụ \`192.168.10.1/24\` và \`192.168.10.2/24\`).
-2. **Kiểm tra Windows Firewall:** Hệ điều hành Windows mặc định chặn gói tin ICMP (Ping). Cần tắt tường lửa (\`Turn off Windows Defender Firewall\`) trên cả 2 laptop để kiểm tra kết nối thông mạng.
+* Cắm vào **Laptop, PC, Camera, Máy in, Trạm 3G chỉ chạy 1 dải IP** ➜ **CẤU HÌNH ACCESS**.
+* Cắm vào **Switch khác, Router truyền dẫn VNPT/Viettel, BBU 4G/5G, Server ảo hóa** ➜ **CẤU HÌNH TRUNK**.
 `;
 
         function generateSlug(t) { return t.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'); }

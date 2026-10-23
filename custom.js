@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { url: "rru-vs-antenna.html", title: "So sánh RRU & Anten Viễn thông", protected: true },
         { url: "bts-power-system.html", title: "Nguồn DC -48V & Pin Lithium BTS", protected: true },
         { url: "mang-truyen-dan-quang-ninh.html", title: "Mạng Truyền dẫn Viễn thông", protected: true },
-        { url: "ciena-3932-csg-vlan.html", title: "Cấu hình Ciena 3932 CSG & VLAN" }
+        { url: "ciena-3932-csg-vlan.html", title: "Bản chất Access & Trunk" }
     ];
 
     const TELECOM_STORAGE_KEY = 'telecom_auth_key';
