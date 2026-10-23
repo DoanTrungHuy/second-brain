@@ -607,5 +607,47 @@ const windowSearchIndex = [
     "category": "Telecommunication Systems",
     "section": "4. Phân tích Phiếu Giao việc & Quy trình Xử lý Sự cố Truyền dẫn",
     "text": "Quy trình ứng cứu thông tin trạm viễn thông qua phiếu giao việc: Phân tích mã trạm tên luồng cảnh báo LOS Loss of Signal, đo kiểm sợi quang bằng máy đo OTDR xác định điểm đứt gãy cự ly mét, máy đo công suất quang OPM kiểm tra suy hao kết nối ODF nhảy dây patch cord hàn quang dã chiến."
-  }
+  },
+{
+  "url": "ciena-3932-csg-vlan.html",
+  "article": "Cấu hình Ciena 3932 CSG & VLAN",
+  "category": "Telecommunication Systems",
+  "section": "Hướng dẫn Toàn diện Ciena 3932 (CSG): Cấu hình VLAN, Access - Trunk & Call Flow",
+  "text": "Tài liệu kỹ thuật chuyên sâu về thiết bị chuyển mạch viễn thông Ciena 3932 Carrier Ethernet Switch Cell Site Gateway CSG chạy hệ điều hành SAOS Service-Aware Operating System. Giải thích chi tiết dòng lệnh CLI, bản chất Access vs Trunk, Packet Call Flow, thiết kế topology mạng viễn thông trạm BTS 3G 4G VNPT."
+},
+{
+  "url": "ciena-3932-csg-vlan.html",
+  "article": "Cấu hình Ciena 3932 CSG & VLAN",
+  "category": "Telecommunication Systems",
+  "section": "1. Tổng quan phần cứng & Kết nối Telnet OOB Mgmt",
+  "text": "Cổng Mgmt Out-of-band OOB độc lập RJ45. Đặt IP tĩnh laptop 172.16.233.213/24, Telnet 172.16.233.214 cổng 23 PuTTY SecureCRT, user su pass wwp World Wide Packets. Cổng 1-4 combo RJ45/SFP quang điện, cổng 5-8 SFP thuần quang."
+},
+{
+  "url": "ciena-3932-csg-vlan.html",
+  "article": "Cấu hình Ciena 3932 CSG & VLAN",
+  "category": "Telecommunication Systems",
+  "section": "2. Cấu hình trạm BTS 3G, 4G, VNPT Uplink SAOS CLI",
+  "text": "vlan create vlan 338,738,2764 khởi tạo VLAN. vlan add vlan port 5 Trunk Uplink VNPT MAN-E. vlan add port 6 Trunk 4G eNodeB data và O&M. vlan add port 7 và port set port 7 pvid 2764 Access 3G NodeB dán bóc tem PVID. port set auto-neg off chống mismatch. port set speed hundred FE gigabit GE. config save lưu cấu hình."
+},
+{
+  "url": "ciena-3932-csg-vlan.html",
+  "article": "Cấu hình Ciena 3932 CSG & VLAN",
+  "category": "Telecommunication Systems",
+  "section": "3. Bản chất Access vs Trunk & Gói tin 802.1Q Tagged",
+  "text": "Nguyên lý VLAN Tag 802.1Q 4 bytes. Cổng Access dành cho thiết bị đầu cuối mù VLAN Laptop Camera NodeB 3G: vào dán tem PVID, ra bóc tem. Cổng Trunk đường ống gom nhiều VLAN chạy chung 1 sợi cáp giữa 2 switch hoặc switch lên router VNPT BBU 4G 5G giữ nguyên tem."
+},
+{
+  "url": "ciena-3932-csg-vlan.html",
+  "article": "Cấu hình Ciena 3932 CSG & VLAN",
+  "category": "Telecommunication Systems",
+  "section": "4. Phân tích Luồng gói tin Packet Call Flow",
+  "text": "Call Flow 1: 3G NodeB gửi gói trần vào Port 7 Access dán tem 2764 chuyển mạch nội bộ sang Port 5 Trunk giữ nguyên tem bắn về VNPT RNC Core, chiều về VNPT gửi có tem Port 5 nhận chuyển sang Port 7 bóc tem trả trạm 3G. Call Flow 2 Laptop cắm switch cùng VLAN thông khác VLAN drop. Call Flow 3 Switch sang Switch qua Trunk liên tầng."
+},
+{
+  "url": "ciena-3932-csg-vlan.html",
+  "article": "Cấu hình Ciena 3932 CSG & VLAN",
+  "category": "Telecommunication Systems",
+  "section": "5. Thiết kế kết nối Switch-Switch & Đo kiểm quang DDM",
+  "text": "Access Link cáp thẳng patch cord vs Trunk Link Uplink cáp quang. Dây nối 2 switch bắt buộc cấu hình Trunk cả 2 đầu cổng đồng bộ. Số dây Access nối 2 switch phụ thuộc số lượng VLAN không phụ thuộc số laptop. Đo kiểm DDM Rx Tx Power port xcvr show port diag, port show status, port set mode rj45 sfp, tắt Windows Defender Firewall khi test ping."
+}
 ];
